@@ -18,6 +18,7 @@ Bernstein, B. C., et al., 2005: Current Icing Potential: algorithm
 from __future__ import annotations
 
 import numpy as np
+from scipy.ndimage import maximum_filter, uniform_filter
 
 EARTH_RADIUS = 6.371e6  # m
 
@@ -60,7 +61,15 @@ def total_deformation(u, v, lats, lons):
 # --------------------------------------------------------------------------
 # Clear-air turbulence: Ellrod TI1 and Ellrod-Knox DTI
 # --------------------------------------------------------------------------
-def ellrod_layers(grid, levels, times=slice(None)):
+def _smooth(a, n):
+    """n x n box average over the horizontal axes (n <= 1: unchanged)."""
+    if n <= 1:
+        return a
+    size = (1,) * (a.ndim - 2) + (n, n)
+    return uniform_filter(np.nan_to_num(a), size=size, mode="nearest")
+
+
+def ellrod_layers(grid, levels, times=slice(None), smooth=3):
     """Ellrod TI1 (1e-7 s^-2) and layer-mean divergence for each layer.
 
     Each layer is bounded by consecutive pressure levels in ``levels``
@@ -68,6 +77,11 @@ def ellrod_layers(grid, levels, times=slice(None)):
     and DEF uses the layer-mean wind, as in Ellrod & Knapp (1992). Layers
     with missing or non-positive thickness are left as NaN rather than
     clamped, so bad data cannot masquerade as a turbulence signal.
+
+    TI and divergence are box-smoothed over ``smooth`` x ``smooth`` points.
+    Hourly GFS divergence at 0.5 deg carries grid-scale noise (convective
+    and gravity-wave signals) that the 40-80 km grids Ellrod's thresholds
+    were developed on did not resolve.
 
     Returns a list of dicts: {"bot", "top", "ti", "div", "vws_kt_kft"}.
     """
@@ -86,18 +100,38 @@ def ellrod_layers(grid, levels, times=slice(None)):
         um, vm = 0.5 * (ub + ut), 0.5 * (vb + vt)
         div, dst, dsh = kinematics(um, vm, grid.lats, grid.lons)
         ti = np.hypot(dst, dsh) * vws * 1e7
-        out.append({"bot": bot, "top": top, "ti": ti, "div": div,
+        ti = np.where(np.isnan(ti), np.nan, _smooth(ti, smooth))
+        out.append({"bot": bot, "top": top, "ti": ti, "div": _smooth(div, smooth),
                     # kt per 1000 ft: rule of thumb >= 6 suggests moderate CAT
                     "vws_kt_kft": vws * 1.943844 * 304.8})
     return out
 
 
-def ellrod_knox_dti(layers, dvt_c=0.1, lag_steps=6, dvt_hours=6.0):
+def convective_mask(precip, rate=2.0, hours=3):
+    """True where the model has convective-scale precip (>= rate mm/h) within
+    the past ``hours`` at the point or a neighbour."""
+    p = np.nan_to_num(precip)
+    m = maximum_filter(p, size=(hours + 1, 3, 3), origin=(hours // 2, 0, 0), mode="nearest")
+    return m >= rate
+
+
+def ellrod_knox_dti(layers, dvt_c=0.1, lag_steps=6, dvt_hours=6.0, div_scale=1e6, convective=None):
     """Divergence-modified turbulence index DTI = TI + DVT per layer.
 
-    DVT = C * (DIV(t) - DIV(t - dt)), with divergence expressed in
-    1e-7 s^-1 so it is commensurate with TI (Ellrod & Knox 2010 use
-    C = 0.1 for a 6 h interval and note C should scale with dt).
+    DVT = C * (DIV(t) - DIV(t - dt)) with divergence multiplied by
+    ``div_scale`` (i.e. expressed in 1e-6 s^-1). Ellrod & Knox (2010) set
+    C = 0.1 for a 6 h interval so that DVT is comparable to TI only when
+    divergence changes are large, and note C should scale with dt. The paper
+    does not state the divergence units; 1e-6 s^-1 meets that intent on real
+    GFS data (DVT p50 ~1, p99 ~10 vs TI p50 ~1, p99 ~15), whereas 1e-7 s^-1
+    made DVT ten times too large and flagged all of ZJX every day.
+
+    Both terms are clear-air diagnostics. Near model convection the upper
+    winds are dominated by thunderstorm outflow (divergence ~1e-4 s^-1,
+    direction reversals over 1 km), which produced DTI values of 40-100 on
+    real GFS data. Where ``convective`` (boolean (nt, ny, nx)) is set the
+    index is zeroed, and that turbulence is carried by the thunderstorm
+    hazard instead.
     Needs ``lag_steps`` earlier time steps; where unavailable DVT = 0 and
     DTI falls back to TI1. Negative values are set to zero, as in the paper.
 
@@ -106,11 +140,14 @@ def ellrod_knox_dti(layers, dvt_c=0.1, lag_steps=6, dvt_hours=6.0):
     c = dvt_c * dvt_hours / 6.0
     dtis, tis = [], []
     for L in layers:
-        div = L["div"] * 1e7
+        div = L["div"] * div_scale
         dvt = np.zeros_like(div)
         if div.shape[0] > lag_steps:
             dvt[lag_steps:] = c * (div[lag_steps:] - div[:-lag_steps])
-        dtis.append(np.clip(np.nan_to_num(L["ti"] + dvt, nan=-1.0), 0, None))
+        dti = np.clip(np.nan_to_num(L["ti"] + dvt, nan=-1.0), 0, None)
+        if convective is not None:
+            dti[convective] = 0.0
+        dtis.append(dti)
         tis.append(L["ti"])
     dti = np.stack(dtis)
     ti = np.stack(tis)

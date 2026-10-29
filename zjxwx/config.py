@@ -54,6 +54,8 @@ DEFAULTS = {
         # proposed scaling C with the interval, which we do (C * dt/6h).
         "dvt_c": 0.1,
         "dvt_hours": 6,
+        "dvt_div_scale": 1e6,   # divergence in 1e-6 s^-1 (see diagnostics.ellrod_knox_dti)
+        "smooth_points": 3,     # 3x3 box smoothing of TI and divergence
     },
     "icing": {
         # Temperature interest (deg C -> 0..1), loosely after CIP/FIP

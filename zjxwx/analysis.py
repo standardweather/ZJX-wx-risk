@@ -70,11 +70,13 @@ class Diagnostics:
         self.grid, self.cfg = grid, cfg
         step_h = _time_step_hours(grid.times)
         tc = cfg["turbulence"]
-        layers = dx.ellrod_layers(grid, CAT_LEVELS)
+        layers = dx.ellrod_layers(grid, CAT_LEVELS, smooth=tc.get("smooth_points", 3))
         if not layers:
             raise ValueError("grid lacks the upper-level wind/height fields for turbulence")
         self.dti, self.ti1, which = dx.ellrod_knox_dti(
-            layers, tc["dvt_c"], max(1, round(tc["dvt_hours"] / step_h)), tc["dvt_hours"])
+            layers, tc["dvt_c"], max(1, round(tc["dvt_hours"] / step_h)), tc["dvt_hours"],
+            tc.get("dvt_div_scale", 1e6),
+            dx.convective_mask(grid.get("precipitation")) if grid.has("precipitation") else None)
         self.dti_fl = np.array([LEVEL_FL[(L["bot"])] + LEVEL_FL[L["top"]] for L in layers]) / 2
         self.dti_layer = which
         self.vws = np.nanmax(np.stack([L["vws_kt_kft"] for L in layers]), axis=0)
