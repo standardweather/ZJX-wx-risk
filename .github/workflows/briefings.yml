@@ -60,3 +60,12 @@ jobs:
           name: briefings
           path: out/
           retention-days: 14
+
+      - name: Compress model data
+        run: gzip -k gfs.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gfs-data
+          path: gfs.json.gz
+          retention-days: 3
