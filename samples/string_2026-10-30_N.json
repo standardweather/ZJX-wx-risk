@@ -1,0 +1,212 @@
+[
+  {
+    "date": "2026-10-30",
+    "shift": "N",
+    "start_utc": "2026-10-30T17:00:00+00:00",
+    "end_utc": "2026-10-31T01:00:00+00:00",
+    "workload": "HIGH",
+    "reason": "Turbulence (CAT): DTI ≥8 over 25% of airspace",
+    "hazards": [
+      {
+        "name": "Thunderstorms",
+        "level": "MODERATE",
+        "detail": "9% of airspace ≥1 TS hour · max 8 h · CAPE max 2,395 J/kg",
+        "driver": "TS ≥1 h over 9% of airspace"
+      },
+      {
+        "name": "Turbulence (CAT)",
+        "level": "HIGH",
+        "detail": "DTI max 13 near FL285 · 60% of airspace ≥4",
+        "driver": "DTI ≥8 over 25% of airspace"
+      },
+      {
+        "name": "Icing",
+        "level": "LOW",
+        "detail": "14% of airspace ≥3 icing h · max 9 h · FL080–FL140 · FZL ~FL125",
+        "driver": ""
+      },
+      {
+        "name": "Heavy precipitation",
+        "level": "MODERATE",
+        "detail": "max 4.33 in · 26% of airspace >0.5 in",
+        "driver": ">0.5 in over 26% of airspace"
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "date": "2026-10-31",
+    "shift": "N",
+    "start_utc": "2026-10-31T17:00:00+00:00",
+    "end_utc": "2026-11-01T01:00:00+00:00",
+    "workload": "HIGH",
+    "reason": "2 moderate hazards combined (Turbulence (CAT), Heavy precipitation)",
+    "hazards": [
+      {
+        "name": "Thunderstorms",
+        "level": "LOW",
+        "detail": "7% of airspace ≥1 TS hour · max 5 h · CAPE max 1,817 J/kg",
+        "driver": ""
+      },
+      {
+        "name": "Turbulence (CAT)",
+        "level": "MODERATE",
+        "detail": "DTI max 6 near FL285 · 17% of airspace ≥4",
+        "driver": "DTI ≥4 over 17% of airspace"
+      },
+      {
+        "name": "Icing",
+        "level": "LOW",
+        "detail": "0% of airspace ≥3 icing h · max 0 h · FZL ~FL115",
+        "driver": ""
+      },
+      {
+        "name": "Heavy precipitation",
+        "level": "MODERATE",
+        "detail": "max 5.55 in · 16% of airspace >0.5 in",
+        "driver": ">0.5 in over 16% of airspace"
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "date": "2026-11-01",
+    "shift": "N",
+    "start_utc": "2026-11-01T18:00:00+00:00",
+    "end_utc": "2026-11-02T02:00:00+00:00",
+    "workload": "HIGH",
+    "reason": "Heavy precipitation: >1.0 in over 15% of airspace",
+    "hazards": [
+      {
+        "name": "Thunderstorms",
+        "level": "MODERATE",
+        "detail": "13% of airspace ≥1 TS hour · max 6 h · CAPE max 1,994 J/kg",
+        "driver": "TS ≥1 h over 13% of airspace"
+      },
+      {
+        "name": "Turbulence (CAT)",
+        "level": "MODERATE",
+        "detail": "DTI max 11 near FL285 · 35% of airspace ≥4",
+        "driver": "DTI ≥4 over 35% of airspace"
+      },
+      {
+        "name": "Icing",
+        "level": "LOW",
+        "detail": "0% of airspace ≥3 icing h · max 0 h · FZL ~FL125",
+        "driver": ""
+      },
+      {
+        "name": "Heavy precipitation",
+        "level": "HIGH",
+        "detail": "max 6.17 in · 19% of airspace >0.5 in",
+        "driver": ">1.0 in over 15% of airspace"
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "date": "2026-11-02",
+    "shift": "N",
+    "start_utc": "2026-11-02T18:00:00+00:00",
+    "end_utc": "2026-11-03T02:00:00+00:00",
+    "workload": "HIGH",
+    "reason": "Turbulence (CAT): DTI ≥8 over 16% of airspace",
+    "hazards": [
+      {
+        "name": "Thunderstorms",
+        "level": "LOW",
+        "detail": "7% of airspace ≥1 TS hour · max 7 h · CAPE max 2,259 J/kg",
+        "driver": ""
+      },
+      {
+        "name": "Turbulence (CAT)",
+        "level": "HIGH",
+        "detail": "DTI max 10 near FL285 · 64% of airspace ≥4",
+        "driver": "DTI ≥8 over 16% of airspace"
+      },
+      {
+        "name": "Icing",
+        "level": "LOW",
+        "detail": "0% of airspace ≥3 icing h · max 3 h · FZL ~FL125",
+        "driver": ""
+      },
+      {
+        "name": "Heavy precipitation",
+        "level": "MODERATE",
+        "detail": "max 1.28 in · 11% of airspace >0.5 in",
+        "driver": ">0.5 in over 11% of airspace"
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "date": "2026-11-03",
+    "shift": "N",
+    "start_utc": "2026-11-03T18:00:00+00:00",
+    "end_utc": "2026-11-04T02:00:00+00:00",
+    "workload": "MODERATE",
+    "reason": "Turbulence (CAT): DTI ≥4 over 25% of airspace",
+    "hazards": [
+      {
+        "name": "Thunderstorms",
+        "level": "LOW",
+        "detail": "3% of airspace ≥1 TS hour · max 5 h · CAPE max 1,831 J/kg",
+        "driver": ""
+      },
+      {
+        "name": "Turbulence (CAT)",
+        "level": "MODERATE",
+        "detail": "DTI max 6 near FL285 · 25% of airspace ≥4",
+        "driver": "DTI ≥4 over 25% of airspace"
+      },
+      {
+        "name": "Icing",
+        "level": "LOW",
+        "detail": "0% of airspace ≥3 icing h · max 0 h · FZL ~FL121",
+        "driver": ""
+      },
+      {
+        "name": "Heavy precipitation",
+        "level": "LOW",
+        "detail": "max 1.45 in · 5% of airspace >0.5 in",
+        "driver": ""
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "date": "2026-11-04",
+    "shift": "N",
+    "start_utc": "2026-11-04T18:00:00+00:00",
+    "end_utc": "2026-11-05T02:00:00+00:00",
+    "workload": "LOW",
+    "reason": "No hazard reaches moderate thresholds",
+    "hazards": [
+      {
+        "name": "Thunderstorms",
+        "level": "LOW",
+        "detail": "0% of airspace ≥1 TS hour · max 0 h · CAPE max 1,401 J/kg",
+        "driver": ""
+      },
+      {
+        "name": "Turbulence (CAT)",
+        "level": "LOW",
+        "detail": "DTI max 4 near FL285 · 0% of airspace ≥4",
+        "driver": ""
+      },
+      {
+        "name": "Icing",
+        "level": "LOW",
+        "detail": "0% of airspace ≥3 icing h · max 0 h · FZL ~FL116",
+        "driver": ""
+      },
+      {
+        "name": "Heavy precipitation",
+        "level": "LOW",
+        "detail": "max 1.33 in · 5% of airspace >0.5 in",
+        "driver": ""
+      }
+    ],
+    "warnings": []
+  }
+]

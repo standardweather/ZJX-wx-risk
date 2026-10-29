@@ -1,0 +1,62 @@
+name: ZJX briefings
+
+on:
+  schedule:
+    # Open-Meteo has the 00Z and 12Z GFS cycles by ~05Z / ~17Z.
+    - cron: "40 5 * * *"
+    - cron: "40 17 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: briefings
+  cancel-in-progress: false
+
+jobs:
+  briefings:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install fonts and Python packages
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q fonts-inter || true
+          pip install -r requirements.txt
+
+      - name: Download GFS from Open-Meteo
+        env:
+          OPEN_METEO_API_KEY: ${{ secrets.OPEN_METEO_API_KEY }}
+        run: python -m zjxwx fetch --start today --days 6 --out gfs.json
+
+      - name: Render briefings
+        run: |
+          mkdir -p out
+          for s in F N; do
+            python -m zjxwx brief  gfs.json --date next  --shift $s --out out/brief_$s.png  --json out/brief_$s.json
+            python -m zjxwx string gfs.json --start next --days 5 --shift $s --out out/string_$s.png --json out/string_$s.json
+          done
+          python tools/write_index.py out
+
+      - name: Publish to the briefings branch
+        run: |
+          cd out
+          git init -q -b briefings
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -q -m "Briefings $(date -u +%Y-%m-%dT%H%MZ)"
+          git push -q -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" briefings
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: briefings
+          path: out/
+          retention-days: 14
