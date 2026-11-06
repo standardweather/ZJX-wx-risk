@@ -63,3 +63,23 @@ def test_tmu_renders_from_synthetic_gfs_only(tmp_path):
         assert kinds.count("HAZARD") == 3 and kinds.count("AWARENESS") == 4
         ifr = next(i for i in p["items"] if i["key"] == "ifr")
         assert not ifr["available"]  # no NBM file
+
+
+def test_hrrr_plan_uses_newest_posted_cycle_per_hour(monkeypatch):
+    from zjxwx import hrrr
+
+    now = datetime(2026, 11, 6, 7, 30, tzinfo=timezone.utc)
+    posted_until = datetime(2026, 11, 6, 5, tzinfo=timezone.utc)  # 06Z and later not complete yet
+
+    def fake_http(url, headers=None, retries=4, timeout=120):
+        cyc = datetime.strptime(url.split("hrrr.")[1][:8] + url.split(".t")[1][:2], "%Y%m%d%H")
+        return b"ok" if cyc.replace(tzinfo=timezone.utc) <= posted_until else None
+
+    monkeypatch.setattr(hrrr, "_http", fake_http)
+    t0 = datetime(2026, 11, 6, 10, tzinfo=timezone.utc)
+    t1 = datetime(2026, 11, 7, 10, tzinfo=timezone.utc)
+    p = hrrr.plan(t0, t1, now=now, log=lambda m: None)
+    assert len(p) == 25
+    assert p[t0][0].hour == 5                    # hourly 05Z cycle (to f018 = 23Z)
+    assert p[datetime(2026, 11, 6, 23, tzinfo=timezone.utc)][0].hour == 5
+    assert p[t1] == (datetime(2026, 11, 6, 0, tzinfo=timezone.utc), 34)  # 00Z extended run

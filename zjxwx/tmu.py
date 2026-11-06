@@ -123,7 +123,7 @@ def _severe_ice_cube(diag):
     return diag._tmu_ice_sev
 
 
-def analyse(window, diag, mask, nbm=None, nbm_mask=None, cfg=None):
+def analyse(window, diag, mask, nbm=None, nbm_mask=None, cfg=None, hrrr=None):
     """Return the list of Elements (hazards first) for one Window."""
     cfg = cfg or diag.cfg
     t = cfg["tmu"]
@@ -167,23 +167,7 @@ def analyse(window, diag, mask, nbm=None, nbm_mask=None, cfg=None):
     out = []
 
     # ---- HAZARD: thunderstorms -------------------------------------------
-    if nbm is not None:
-        idx = [i for i, _ in nb_acc]
-        p = nbm.get("tstm")[idx]
-        el = Element("ts", "HAZARD", "Thunderstorms", C["ts"], None, "NBM")
-        out.append(nbm_elem(el, np.nan_to_num(p) >= t["ts_prob"], [h for _, h in nb_acc], True,
-                            lambda: f"1-h thunder probability ≥ {t['ts_prob']}% · peak "
-                                    f"{np.nanmax(np.where(nbm_mask.w[None] > 0, p, np.nan)):.0f}% in ZJX"))
-    else:
-        el = Element("ts", "HAZARD", "Thunderstorms", C["ts"], None, "GFS")
-        if diag.ts is None:
-            el.available = False
-            out.append(el)
-        else:
-            cube = diag.ts[inst].astype(float)
-            out.append(gfs_elem(el, cube, 0.5, s.ts_hours,
-                                lambda: f"GFS thunderstorm signal · max {mask.max(s.ts_hours):.0f} h · "
-                                        f"CAPE to {mask.max(s.cape_max):,.0f} J/kg"))
+    out.append(_thunder(window, diag, s, inst, mask, nbm, hrrr, t, minf))
 
     # ---- HAZARD: severe clear-air turbulence -----------------------------
     sev, mod = t["turb_severe_dti"], t["turb_moderate_dti"]
@@ -308,6 +292,124 @@ def analyse(window, diag, mask, nbm=None, nbm_mask=None, cfg=None):
     return s, out
 
 
+class _Nearest:
+    """Nearest-neighbour lookup from a curvilinear (lat, lon) grid to target points."""
+
+    def __init__(self, lats, lons, qlat, qlon, max_deg=0.1):
+        from scipy.spatial import cKDTree
+
+        k = np.cos(np.radians(30.0))
+        tree = cKDTree(np.c_[np.ravel(lats), np.ravel(lons) * k])
+        d, self.idx = tree.query(np.c_[np.ravel(qlat), np.ravel(qlon) * k])
+        self.ok = d <= max_deg
+        self.shape = np.shape(qlat)
+
+    def __call__(self, field):
+        v = np.ravel(field)[self.idx] & self.ok
+        return v.reshape(self.shape)
+
+
+def _display_grid(res=0.05):
+    from .config import EXTENT
+
+    x0, x1, y0, y1 = EXTENT
+    return np.meshgrid(np.arange(x0 - 1, x1 + 1, res), np.arange(y0 - 1, y1 + 1, res))
+
+
+_CACHE = {}
+
+
+def _nearest(src, key, qlat, qlon):
+    k = (id(src), key)
+    if k not in _CACHE:
+        _CACHE[k] = _Nearest(src.lats, src.lons, qlat, qlon)
+    return _CACHE[k]
+
+
+def _thunder(window, diag, s, inst, mask, nbm, hrrr, t, minf):
+    """Thunderstorm hazard: union of HRRR, NBM and GFS signals.
+
+    HRRR (convection-allowing) gives where storms are forecast: echo top
+    >= hrrr_top_kft or any lightning threat, widened by hrrr_radius_km for
+    placement error. NBM adds its calibrated thunder probability, and GFS
+    its CAPE + LI + precipitation signal. Any one of them is enough: for
+    traffic management a missed line of 45 kft tops costs far more than an
+    over-drawn area, and on 6 Nov 2026 NBM alone missed exactly that.
+    """
+    from scipy.interpolate import RegularGridInterpolator
+    from scipy.ndimage import maximum_filter
+
+    grid = diag.grid
+    DX, DY = _display_grid()
+    plat, plon = mask.pts[:, 0], mask.pts[:, 1]
+    hours = s.hours
+    disp = np.zeros(DX.shape, bool)
+    hourly = np.zeros((len(hours), len(plat)), bool)
+    used, bits = [], []
+
+    def add(name, cubes, detail):
+        """cubes: list of (hour index, disp bool, pts bool)."""
+        hit = False
+        for k, d, p in cubes:
+            disp[:] |= d
+            hourly[k] |= p
+            hit |= bool(np.sum(mask.w * p) >= minf)
+        used.append(name)
+        if hit:
+            bits.append(detail())
+
+    if hrrr is not None:
+        top = hrrr.get("retop") * 3.28084 / 1000.0
+        lt = hrrr.get("ltng")
+        ind = (np.nan_to_num(top) >= t["hrrr_top_kft"]) | (np.nan_to_num(lt) > t["hrrr_ltng"])
+        size = 2 * int(round(t["hrrr_radius_km"] / hrrr.meta.get("stride_km", 6))) + 1
+        nd = _nearest(hrrr, "disp", DY, DX)
+        npt = _nearest(hrrr, "pts", plat, plon)
+        cubes, tops = [], []
+        for k, h in enumerate(hours):
+            i = hrrr.index(h)
+            if i is None:
+                continue
+            a = maximum_filter(ind[i], size=size)
+            cubes.append((k, nd(a), npt(a)))
+            tops.append(np.where(npt(ind[i]), np.ravel(top[i])[npt.idx], np.nan))
+        tmax = np.nanmax(tops) if tops and np.isfinite(tops).any() else np.nan
+        add("HRRR", cubes, lambda: "HRRR storms" + (f", tops to {tmax:.0f} kft" if np.isfinite(tmax) else ""))
+    if nbm is not None:
+        p = nbm.get("tstm")
+        nd = _nearest(nbm, "disp", DY, DX)
+        npt = _nearest(nbm, "pts", plat, plon)
+        cubes, peak = [], 0.0
+        for k, h in enumerate(hours):
+            i = nbm.index(h)
+            if i is None or h <= window.start:
+                continue  # an accumulation valid at the start covers the hour before
+            a = np.nan_to_num(p[i]) >= t["ts_prob"]
+            cubes.append((k, nd(a), npt(a)))
+            peak = max(peak, float(np.nanmax(np.where(npt.ok, np.ravel(p[i])[npt.idx], np.nan))))
+        add("NBM", cubes, lambda: f"NBM P(thunder) to {peak:.0f}%")
+    if diag.ts is not None:
+        cubes = []
+        for k, gi in enumerate(inst):
+            f = RegularGridInterpolator((grid.lats, grid.lons), diag.ts[gi].astype(float),
+                                        bounds_error=False, fill_value=0.0)
+            cubes.append((k, f((DY, DX)) >= 0.5, f(mask.pts) >= 0.5))
+        add("GFS", cubes, lambda: f"GFS signal, CAPE to {mask.max(s.cape_max):,.0f} J/kg")
+
+    el = Element("ts", "HAZARD", "Thunderstorms", C["ts"], None, " + ".join(used) or "none")
+    if not used:
+        el.available = False
+        return el
+    el.plot = (DX, DY, _smooth_ind(disp), 0.5)
+    el.frac = float(np.sum(mask.w * hourly.any(axis=0)))
+    series = hourly.astype(float) @ mask.w
+    el.hours = _hours_from_series(series, hours, minf, accum=False)
+    if el.frac < minf:
+        el.frac, el.hours = 0.0, []
+    el.detail = " · ".join(bits) if el.frac else ""
+    return el
+
+
 def _ice_mod(el, s, cube, mask, nh, times, minf, grid, detail):
     X, Y, Z = _fine(grid, s.ice_hours)
     el.plot = (X, Y, Z, nh - 0.5)
@@ -417,9 +519,10 @@ def render(window, summary, elements, boundary, out, sources, issued=None, dpi=1
 
     _panel(fig, [0.645, 0.075, 0.335, y - 0.09], elements, w.tz)
     _footer(fig, "Sources: " + sources)
-    if sources.startswith("NBM"):
+    models = [m for m in ("HRRR", "NBM") if sources.find(m) != -1 and f"{m} unavailable" not in sources]
+    if models:
         ft = fig.texts[-1]
-        ft.set_text(ft.get_text().replace("raw GFS model output", "raw NBM and GFS model output"))
+        ft.set_text(ft.get_text().replace("raw GFS model output", f"raw {', '.join(models)} and GFS model output"))
     fig.savefig(out, dpi=dpi, facecolor=S["paper"])
     plt.close(fig)
     return out
@@ -508,7 +611,8 @@ def day_span(day, tz=TIMEZONE):
     return ws, ws[0].start, ws[-1].end
 
 
-def run(grid, diag, mask, boundary, day, outdir, nbm=None, tz=TIMEZONE, issued=None, dpi=170, log=print):
+def run(grid, diag, mask, boundary, day, outdir, nbm=None, tz=TIMEZONE, issued=None, dpi=170, log=print,
+        hrrr=None):
     from pathlib import Path
 
     outdir = Path(outdir)
@@ -518,15 +622,17 @@ def run(grid, diag, mask, boundary, day, outdir, nbm=None, tz=TIMEZONE, issued=N
     mask.boundary = boundary
     gfs_run = grid.meta.get("run")
     sources = []
+    if hrrr is not None:
+        sources.append(f"{hrrr.label} (thunderstorms)")
     if nbm is not None:
-        sources.append(f"{nbm.label} (thunder, IFR/LIFR, LLWS, freezing rain)")
+        sources.append(f"{nbm.label} (thunder probability, IFR/LIFR, LLWS, freezing rain)")
     sources.append(f"{grid.model_label}{' ' + gfs_run.replace('T', ' ') if gfs_run else ''} "
-                   f"(turbulence FL240–FL390, icing FL025–FL210"
-                   + ("" if nbm is not None else "; thunder and freezing rain: NBM unavailable") + ")")
+                   f"(thunder signal, turbulence FL240–FL390, icing FL025–FL210"
+                   + ("" if nbm is not None else "; NBM unavailable") + ")")
     src = " · ".join(sources)
     rows = []
     for w in windows:
-        s, els = analyse(w, diag, mask, nbm, nbm_mask)
+        s, els = analyse(w, diag, mask, nbm, nbm_mask, hrrr=hrrr)
         name = f"tmu_{w.shift.code}.png"
         render(w, s, els, boundary, outdir / name, src, issued, dpi, grid.synthetic)
         log(f"{w.shift.code} {w.local_label()}: " +

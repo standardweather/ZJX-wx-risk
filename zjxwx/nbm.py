@@ -85,7 +85,7 @@ class NbmGrid:
 
     @property
     def label(self):
-        return f"NBM {self.meta.get('version', 'v4')} {self.meta.get('cycle', '')}".strip()
+        return f"{self.meta.get('model', 'NBM v4')} {self.meta.get('cycle', '')}".strip()
 
 
 # --------------------------------------------------------------------------
@@ -248,7 +248,7 @@ def fetch(t0: datetime, t1: datetime, stride=2, workers=8, cycle=None, log=print
         log(f"NBM: {len(missing)} messages missing, e.g. {missing[:4]}")
     times = np.array([np.datetime64((cycle + timedelta(hours=fh)).replace(tzinfo=None), "m")
                       for fh in hours])
-    meta = {"cycle": f"{cycle:%Y-%m-%d %HZ}", "source": BUCKET, "stride_km": 2.5 * stride,
+    meta = {"model": "NBM v4", "cycle": f"{cycle:%Y-%m-%d %HZ}", "source": BUCKET, "stride_km": 2.5 * stride,
             "missing": len(missing)}
     if version is not None:
         meta["process"] = int(version)

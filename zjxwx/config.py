@@ -88,9 +88,13 @@ DEFAULTS = {
     # OM/TMU/OS hazard and awareness maps (zjxwx/tmu.py). An area is drawn
     # where the condition is met in at least one hour of the period.
     "tmu": {
-        # HAZARD: thunderstorms. NBM 1-h thunder probability (%), any hour.
-        # Fallback without NBM: GFS thunderstorm-signal hours (see "convection").
+        # HAZARD: thunderstorms. NBM 1-h thunder probability (%), any hour,
+        # or the GFS thunderstorm signal (see "convection")...
         "ts_prob": 25,
+        # ...or HRRR simulated echo top >= hrrr_top_kft or any lightning
+        # threat (> hrrr_ltng flashes/km2/5 min), widened by hrrr_radius_km
+        # for placement error. Any one source flags an area (see tmu._thunder).
+        "hrrr_top_kft": 30, "hrrr_ltng": 0.0, "hrrr_radius_km": 20,
         # HAZARD: severe clear-air turbulence; AWARENESS: moderate.
         # GFS Ellrod-Knox DTI over FL240-FL390 (1e-7 s^-2, see "turbulence").
         "turb_severe_dti": 12, "turb_moderate_dti": 8,

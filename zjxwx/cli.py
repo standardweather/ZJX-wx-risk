@@ -121,6 +121,16 @@ def cmd_nbm(args):
     print("wrote", args.out)
 
 
+def cmd_hrrr(args):
+    from .hrrr import fetch
+    from .tmu import day_span, operational_day
+
+    _, t0, t1 = day_span(operational_day(args.date, args.tz), args.tz)
+    g = fetch(t0, t1, log=lambda m: print(m, file=sys.stderr))
+    g.save(args.out)
+    print("wrote", args.out)
+
+
 def cmd_tmu(args):
     from pathlib import Path
     from .nbm import NbmGrid
@@ -133,8 +143,15 @@ def cmd_tmu(args):
             nbm = NbmGrid.load(args.nbm)
         else:
             print(f"warning: {args.nbm} not found; rendering from GFS only", file=sys.stderr)
+    hrrr = None
+    if args.hrrr:
+        if Path(args.hrrr).exists():
+            hrrr = NbmGrid.load(args.hrrr)
+        else:
+            print(f"warning: {args.hrrr} not found; thunderstorms from NBM/GFS only", file=sys.stderr)
     day = operational_day(args.date, args.tz)
-    res = run(grid, diag, mask, boundary, day, args.outdir, nbm, args.tz, _issued(args.issued), args.dpi)
+    res = run(grid, diag, mask, boundary, day, args.outdir, nbm, args.tz, _issued(args.issued), args.dpi,
+              hrrr=hrrr)
     with open(Path(args.outdir) / "tmu.json", "w") as fh:
         json.dump(res, fh, indent=2, ensure_ascii=False)
     print("wrote", args.outdir)
@@ -189,9 +206,16 @@ def main(argv=None):
     n.add_argument("--out", required=True, help="output .npz")
     n.set_defaults(func=cmd_nbm)
 
+    r = sub.add_parser("hrrr", help="download HRRR echo tops and lightning for the OM/TMU/OS maps")
+    r.add_argument("--date", type=_date, default="today", help="operational day: YYYY-MM-DD or 'today'")
+    r.add_argument("--tz", default=TIMEZONE)
+    r.add_argument("--out", required=True, help="output .npz")
+    r.set_defaults(func=cmd_hrrr)
+
     m = sub.add_parser("tmu", help="OM/TMU/OS hazard and awareness maps (0500-1300, 1300-2100, 2100-0500 local)")
     m.add_argument("grid", help="GFS grid JSON from 'fetch' (or 'synth')")
     m.add_argument("--nbm", help="NBM .npz from 'nbm' (optional; GFS-only without it)")
+    m.add_argument("--hrrr", help="HRRR .npz from 'hrrr' (optional; thunderstorms from NBM/GFS without it)")
     m.add_argument("--date", type=_date, default="today", help="operational day: YYYY-MM-DD or 'today'")
     m.add_argument("--outdir", required=True, help="directory for tmu_AM/PM/MID.png and tmu.json")
     m.add_argument("--config", help="JSON overriding thresholds in config.DEFAULTS")
