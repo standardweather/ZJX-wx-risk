@@ -69,11 +69,8 @@ def _tmu_section(out: Path, stamp: str):
 <section id="tmu">
   <div class="sec-head">
     <h2>OM/TMU/OS</h2>
-    <p>Hazard and awareness areas for <strong>{_day(res['day'])}</strong>, issued
-       {issued:%a %d %b %H%MZ} (once each morning, before 0500 local).
-       <span class="why">Solid = hazard (thunderstorms, severe turbulence, severe icing).
-       Hatched = awareness (IFR/LIFR, moderate turbulence, moderate icing, low-level wind shear).</span></p>
-    <p class="why">{html.escape(res['sources'])}</p>
+    <p><strong>{_day(res['day'])}</strong> · issued {issued:%H%MZ}
+       <span class="why">Solid = hazard · hatched = awareness</span></p>
   </div>
   {''.join(blocks)}
 </section>"""

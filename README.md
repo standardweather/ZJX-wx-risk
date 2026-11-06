@@ -66,7 +66,9 @@ Why HRRR for thunderstorms: on 6 Nov 2026, storms with 42–49 kft MRMS echo top
 
 Why GFS for turbulence and icing: NBM v4 has no in-flight icing aloft. Its only upper-level turbulence field is an undocumented 0–3 Ellrod category for 400–300 hPa. Its low-level turbulence category (surface–4,500 ft) put "severe" and "extreme" over 6 % of ZJX on 6 Nov 2026, where 10 m winds were about 8 kt, so it is not used. Without an NBM file (or if the download fails), `tmu` still renders: thunderstorms and freezing rain fall back to GFS, and IFR/LIFR and LLWS show as unavailable.
 
-The side panel lists every item with the share of ZJX affected, the local hours and the altitudes. It also lists the ZJX airports that reach P(IFR) ≥ 40 %.
+The side panel keeps the words to a minimum: each item's share of ZJX, local hours and altitudes or tops, plus the ZJX airports that reach P(IFR) ≥ 40 %. The footer reads only "Unofficial Briefing Aid - Automatically Generated"; the model runs used are recorded in `tmu.json`.
+
+Areas are generalised for display (`close_km`, `min_area_km2`, `smooth_km` in `config.DEFAULTS["tmu"]`): gaps under 20 km are closed, areas under 5,000 km² and holes of that size are dropped, and edges are smoothed over 15 km. The share of ZJX is measured on what is drawn.
 
 ## Layout
 ```

@@ -116,6 +116,10 @@ DEFAULTS = {
         # Ignore specks: an area must cover at least this fraction of the
         # ZJX airspace to be listed as present.
         "min_area": 0.002,
+        # Map display: close gaps narrower than close_km, drop areas smaller
+        # than min_area_km2, then smooth edges over smooth_km, so the map
+        # shows broad areas rather than grid-point detail.
+        "close_km": 20, "min_area_km2": 5000, "smooth_km": 15,
     },
     # Workload rules use the fraction of ZJX airspace (area-weighted) meeting a
     # condition. Each hazard maps to 0 LOW / 1 MODERATE / 2 HIGH.

@@ -28,6 +28,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.lines import Line2D
 from matplotlib.patches import FancyBboxPatch, Rectangle
 from scipy.ndimage import uniform_filter
 from shapely.geometry import Point
@@ -36,7 +37,7 @@ from . import diagnostics as dx
 from .analysis import Window, summarize
 from .config import AIRPORTS, ICING_LEVELS, STYLE as S, TIMEZONE, TMU_PERIODS
 from .geo import _polygon_path
-from .render import HALO, PC, _fine, _footer, _header, _map_axes, _overlay_geography, _tint
+from .render import HALO, PC, _fine, _header, _map_axes, _overlay_geography, _tint
 
 C = S["tmu"]
 
@@ -441,6 +442,105 @@ def _airport_ifr(nbm, ifr, lifr, times, t, tz, boundary):
 
 
 # --------------------------------------------------------------------------
+# Generalising areas for display
+# --------------------------------------------------------------------------
+_DISP = {}
+
+
+def _disp_grid():
+    """Regular ~5 km lon/lat grid over the map, shared by every element."""
+    if "g" not in _DISP:
+        DX, DY = _display_grid(0.05)
+        _DISP["g"] = (DX, DY)
+    return _DISP["g"]
+
+
+def _to_disp(plot):
+    """Boolean 'in area' on the display grid from any element plot tuple."""
+    X, Y, Z, lvl = plot
+    DX, DY = _disp_grid()
+    key = (X.shape, float(np.nanmin(X)), float(np.nanmin(Y)))
+    if key not in _CACHE:
+        _CACHE[key] = _Nearest(Y, X, DY, DX, max_deg=0.2)
+    return _CACHE[key](np.nan_to_num(Z, nan=-1) >= lvl)
+
+
+def _generalise(ind, g):
+    """Grid-point detail -> broad areas: close gaps, drop small blobs, smooth edges.
+
+    Returns a float field to contour at 0.5.
+    """
+    from scipy.ndimage import binary_closing, gaussian_filter, label
+
+    km = 5.5  # display grid spacing
+    r = max(1, int(round(g["close_km"] / km)))
+    yy, xx = np.mgrid[-r:r + 1, -r:r + 1]
+    a = binary_closing(ind, structure=(xx ** 2 + yy ** 2) <= r * r, border_value=0)
+    min_cells = g["min_area_km2"] / (km * km)
+    lab, n = label(a)
+    if n:  # drop small areas
+        keep = np.bincount(lab.ravel()) >= min_cells
+        keep[0] = False
+        a = keep[lab]
+    lab, n = label(~a)
+    if n:  # fill small holes
+        small = np.bincount(lab.ravel()) < min_cells
+        small[0] = False
+        a = a | small[lab]
+    return gaussian_filter(a.astype(float), g["smooth_km"] / km)
+
+
+def generalise(elements, mask, cfg):
+    """Replace each element's plot with a smoothed, de-speckled display field
+    and recompute its ZJX coverage from what is drawn."""
+    g = cfg["tmu"]
+    DX, DY = _disp_grid()
+    x0, y0 = DX[0, 0], DY[0, 0]
+    iy = np.clip(np.round((mask.pts[:, 0] - y0) / 0.05).astype(int), 0, DX.shape[0] - 1)
+    ix = np.clip(np.round((mask.pts[:, 1] - x0) / 0.05).astype(int), 0, DX.shape[1] - 1)
+    for el in elements:
+        if el.plot is None or not el.available:
+            continue
+        ind = _to_disp(el.plot)
+        for extra in getattr(el, "extra_plots", []):
+            ind |= _to_disp(extra)
+        el.extra_plots = []
+        Z = _generalise(ind, g)
+        el.plot = (DX, DY, Z, 0.5)
+        frac = float(np.sum(mask.w * (Z[iy, ix] >= 0.5)))
+        if frac < cfg["tmu"]["min_area"]:
+            el.frac, el.hours = 0.0, []
+        else:
+            el.frac = frac
+        lp = getattr(el, "lifr_plot", None)
+        if lp is not None:
+            Zl = _generalise(_to_disp(lp), g)
+            el.lifr_plot = (DX, DY, Zl, 0.5) if np.sum(mask.w * (Zl[iy, ix] >= 0.5)) >= g["min_area"] else None
+        el.short = _short(el)
+
+
+def _short(el):
+    """A few words for the panel: altitudes or tops, nothing else."""
+    import re
+
+    d = el.detail or ""
+    if el.key == "ts":
+        m = re.search(r"tops to (\d+) kft", d)
+        return f"Tops to {m.group(1)} kft" if m else ""
+    if el.key == "llws":
+        return "Below 2,000 ft AGL"
+    if el.key == "ifr":
+        return "LIFR at times" if getattr(el, "lifr_plot", None) is not None else ""
+    if el.key == "ice_sev" and "freezing rain" in d.lower():
+        return "Freezing rain"
+    m = re.search(r"FL(\d{3})–FL(\d{3})", d)
+    if not m:
+        return ""
+    lo, hi = (int(round(int(v) / 10.0)) * 10 for v in m.groups())
+    return f"FL{lo:03d}–{hi:03d}"
+
+
+# --------------------------------------------------------------------------
 # Rendering
 # --------------------------------------------------------------------------
 def _draw(ax, el, z):
@@ -518,11 +618,9 @@ def render(window, summary, elements, boundary, out, sources, issued=None, dpi=1
                 fontsize=30, color="#b3261e", alpha=0.25, weight="bold", rotation=30, zorder=10)
 
     _panel(fig, [0.645, 0.075, 0.335, y - 0.09], elements, w.tz)
-    _footer(fig, "Sources: " + sources)
-    models = [m for m in ("HRRR", "NBM") if sources.find(m) != -1 and f"{m} unavailable" not in sources]
-    if models:
-        ft = fig.texts[-1]
-        ft.set_text(ft.get_text().replace("raw GFS model output", f"raw {', '.join(models)} and GFS model output"))
+    fig.add_artist(Line2D([0.015, 0.98], [0.045, 0.045], transform=fig.transFigure, color=S["rule"], lw=0.8))
+    fig.text(0.015, 0.024, "Unofficial Briefing Aid - Automatically Generated", fontsize=9, color=S["muted"],
+             va="center")
     fig.savefig(out, dpi=dpi, facecolor=S["paper"])
     plt.close(fig)
     return out
@@ -542,55 +640,48 @@ def _panel(fig, rect, elements, tz):
         for e in items:
             yy = _item(fig, x, yy, wdt, e, tz)
         yy -= 0.018
-    fig.text(x, yy + 0.008, "Solid = hazard · hatched = awareness · an area means the condition is "
-             "met in at least one hour of the period. Times are local.", fontsize=7.4, color=S["muted"],
-             va="top", wrap=True)
-    yy -= 0.03
     ap = next((e for e in elements if e.key == "ifr"), None)
     rows = getattr(ap, "airports", None) if ap is not None else None
-    fig.text(x, yy, "AIRPORTS (NBM IFR/LIFR)", fontsize=10.5, weight="bold", va="top")
+    fig.text(x, yy, "AIRPORTS IFR/LIFR", fontsize=10.5, weight="bold", va="top")
     yy -= 0.028
     if ap is None or not ap.available:
-        fig.text(x, yy, "NBM unavailable for this run", fontsize=8.5, color=S["muted"], va="top")
+        fig.text(x, yy, "n/a", fontsize=8.5, color=S["muted"], va="top")
     elif not rows:
-        fig.text(x, yy, f"No ZJX airport reaches P(IFR) ≥ {ap.threshold}%", fontsize=8.5,
-                 color=S["muted"], va="top")
+        fig.text(x, yy, "None", fontsize=8.5, color=S["muted"], va="top")
     else:
         for name, cat, pi, pl, span in rows[:6]:
             fig.text(x, yy, name, fontsize=9, weight="bold", va="top")
             fig.text(x + 0.04, yy, f"{cat}", fontsize=9, weight="bold", va="top", color=C["ifr"])
-            fig.text(x + 0.085, yy, f"P(IFR) {pi:.0f}% · P(LIFR) {pl:.0f}% · {span}", fontsize=8.4,
-                     va="top", color=S["muted"])
+            fig.text(x + 0.085, yy, span, fontsize=8.6, va="top", color=S["ink"])
             yy -= 0.024
 
 
 def _item(fig, x, y, w, e, tz):
-    rh = 0.064
+    rh = 0.052
     on = e.present
     fig.patches.append(FancyBboxPatch((x, y - rh + 0.006), w, rh - 0.006,
                                       boxstyle="round,pad=0,rounding_size=0.004",
                                       transform=fig.transFigure,
                                       facecolor=_tint(e.color, 0.07) if on else "#f6f7f9",
                                       edgecolor=e.color if on else S["rule"], lw=0.9 if on else 0.6))
-    sw = fig.add_axes([x + 0.008, y - rh + 0.019, 0.026, rh - 0.032])
+    sw = fig.add_axes([x + 0.008, y - rh + 0.016, 0.024, rh - 0.026])
     sw.set_axis_off()
     sw.set_zorder(5)  # above the figure-level card background
     sw.add_patch(Rectangle((0.04, 0.04), 0.92, 0.92, transform=sw.transAxes, **_swatch(e)))
-    tx = x + 0.044
-    fig.text(tx, y - 0.008, e.name, fontsize=10, weight="bold", va="top",
+    tx = x + 0.042
+    fig.text(tx, y - 0.009, e.name, fontsize=10, weight="bold", va="top",
              color=S["ink"] if on else S["muted"])
     if not e.available:
-        status, sub = "n/a", f"{e.source} data unavailable for this run"
+        status, sub = "n/a", ""
     elif on:
         status = f"{e.frac:.0%}" if e.frac >= 0.005 else "<1%"
-        sub = _span(e.hours, tz)
+        sub = " · ".join(x for x in (_span(e.hours, tz), getattr(e, "short", "")) if x)
     else:
-        status, sub = "None", "Not forecast in ZJX"
-    fig.text(x + w - 0.008, y - 0.008, status, fontsize=10, weight="bold", va="top", ha="right",
+        status, sub = "None", ""
+    fig.text(x + w - 0.008, y - 0.009, status, fontsize=10, weight="bold", va="top", ha="right",
              color=e.color if on else S["muted"])
-    fig.text(tx, y - 0.027, sub, fontsize=8.4, va="top", color=S["ink"] if on else S["muted"])
-    if on and e.detail:
-        fig.text(tx, y - 0.044, e.detail, fontsize=7.6, va="top", color=S["muted"])
+    if sub:
+        fig.text(tx, y - 0.028, sub, fontsize=8.6, va="top", color=S["ink"])
     return y - rh
 
 
@@ -633,6 +724,7 @@ def run(grid, diag, mask, boundary, day, outdir, nbm=None, tz=TIMEZONE, issued=N
     rows = []
     for w in windows:
         s, els = analyse(w, diag, mask, nbm, nbm_mask, hrrr=hrrr)
+        generalise(els, mask, diag.cfg)
         name = f"tmu_{w.shift.code}.png"
         render(w, s, els, boundary, outdir / name, src, issued, dpi, grid.synthetic)
         log(f"{w.shift.code} {w.local_label()}: " +
