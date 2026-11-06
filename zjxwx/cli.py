@@ -110,6 +110,36 @@ def cmd_fetch(args):
     print("wrote", args.out)
 
 
+def cmd_nbm(args):
+    from .nbm import fetch, parse_cycle
+    from .tmu import day_span, operational_day
+
+    _, t0, t1 = day_span(operational_day(args.date, args.tz), args.tz)
+    g = fetch(t0, t1, cycle=parse_cycle(args.cycle) if args.cycle else None,
+              log=lambda m: print(m, file=sys.stderr))
+    g.save(args.out)
+    print("wrote", args.out)
+
+
+def cmd_tmu(args):
+    from pathlib import Path
+    from .nbm import NbmGrid
+    from .tmu import operational_day, run
+
+    cfg, grid, boundary, mask, diag = _prepare(args)
+    nbm = None
+    if args.nbm:
+        if Path(args.nbm).exists():
+            nbm = NbmGrid.load(args.nbm)
+        else:
+            print(f"warning: {args.nbm} not found; rendering from GFS only", file=sys.stderr)
+    day = operational_day(args.date, args.tz)
+    res = run(grid, diag, mask, boundary, day, args.outdir, nbm, args.tz, _issued(args.issued), args.dpi)
+    with open(Path(args.outdir) / "tmu.json", "w") as fh:
+        json.dump(res, fh, indent=2, ensure_ascii=False)
+    print("wrote", args.outdir)
+
+
 def cmd_synth(args):
     from .synthetic import write
 
@@ -151,6 +181,25 @@ def main(argv=None):
     f.add_argument("--model", help="Open-Meteo 'models' value, e.g. gfs025")
     f.add_argument("--out", required=True)
     f.set_defaults(func=cmd_fetch)
+
+    n = sub.add_parser("nbm", help="download NBM fields for the OM/TMU/OS maps (AWS open data)")
+    n.add_argument("--date", type=_date, default="today", help="operational day: YYYY-MM-DD or 'today'")
+    n.add_argument("--cycle", help="NBM cycle YYYYMMDDHH (default: newest that covers the day)")
+    n.add_argument("--tz", default=TIMEZONE)
+    n.add_argument("--out", required=True, help="output .npz")
+    n.set_defaults(func=cmd_nbm)
+
+    m = sub.add_parser("tmu", help="OM/TMU/OS hazard and awareness maps (0500-1300, 1300-2100, 2100-0500 local)")
+    m.add_argument("grid", help="GFS grid JSON from 'fetch' (or 'synth')")
+    m.add_argument("--nbm", help="NBM .npz from 'nbm' (optional; GFS-only without it)")
+    m.add_argument("--date", type=_date, default="today", help="operational day: YYYY-MM-DD or 'today'")
+    m.add_argument("--outdir", required=True, help="directory for tmu_AM/PM/MID.png and tmu.json")
+    m.add_argument("--config", help="JSON overriding thresholds in config.DEFAULTS")
+    m.add_argument("--boundary", help="GeoJSON airspace boundary (default: bundled KZJX)")
+    m.add_argument("--tz", default=TIMEZONE)
+    m.add_argument("--issued", help="issue time stamp, ISO 8601 (default: now)")
+    m.add_argument("--dpi", type=int, default=150)
+    m.set_defaults(func=cmd_tmu)
 
     y = sub.add_parser("synth", help="write synthetic demo data")
     y.add_argument("--start", type=_date, required=True)

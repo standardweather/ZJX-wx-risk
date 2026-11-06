@@ -10,6 +10,12 @@ on:
 permissions:
   contents: write
 
+env:
+  # The OM/TMU/OS maps are issued once each morning (05:40Z = 00:40 EST /
+  # 01:40 EDT, well before 0500 local) and on manual runs. The evening run
+  # carries the morning's maps forward unchanged.
+  TMU: ${{ github.event_name == 'workflow_dispatch' || github.event.schedule == '40 5 * * *' }}
+
 concurrency:
   group: briefings
   cancel-in-progress: false
@@ -43,7 +49,26 @@ jobs:
             python -m zjxwx brief  gfs.json --date next  --shift $s --out out/brief_$s.png  --json out/brief_$s.json
             python -m zjxwx string gfs.json --start next --days 5 --shift $s --out out/string_$s.png --json out/string_$s.json
           done
-          python tools/write_index.py out
+
+      - name: OM/TMU/OS maps (NBM from AWS open data + GFS)
+        id: tmu
+        if: env.TMU == 'true'
+        continue-on-error: true
+        run: |
+          python -m zjxwx nbm --date today --out nbm.npz \
+            || echo "::warning::NBM download failed; OM/TMU/OS maps fall back to GFS only"
+          python -m zjxwx tmu gfs.json $( [ -f nbm.npz ] && echo --nbm nbm.npz ) --date today --outdir out/tmu
+
+      - name: Carry forward this morning's OM/TMU/OS maps
+        if: env.TMU != 'true' || steps.tmu.outcome == 'failure'
+        run: |
+          rm -rf out/tmu
+          git fetch -q --depth 1 origin briefings \
+            && git archive FETCH_HEAD tmu | tar -x -C out \
+            || echo "No earlier OM/TMU/OS maps on the briefings branch"
+
+      - name: Write the web page
+        run: python tools/write_index.py out
 
       - name: Publish to the briefings branch
         run: |

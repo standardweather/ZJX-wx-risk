@@ -5,6 +5,8 @@ This package turns GFS output from Open-Meteo into two products for ZJX ARTCC:
 * **Briefing sheet** (`brief`): one shift. It has three hazard maps (precipitation and thunderstorms, clear-air turbulence for FL240–FL390, and icing potential with the freezing level), a workload scorecard and an hourly hazard-coverage timeline.
 * **Shift-string outlook** (`string`): several days of the same shift. It has a hazard × day calendar strip and a composite map for each day.
 
+* **OM/TMU/OS maps** (`nbm` + `tmu`): one simple ZJX map for each of 0500–1300, 1300–2100 and 2100–0500 local, issued once each morning. Each shows **hazard** areas (thunderstorms, severe turbulence, severe icing) and **awareness** areas (IFR/LIFR, moderate turbulence, moderate icing, low-level wind shear). See [OM/TMU/OS maps](#omtmuos-maps).
+
 It replaces `original/make_gfs_map.py` and `original/make_string_panel.py`. See [CRITIQUE.md](CRITIQUE.md) for the bugs that were fixed and the reasoning behind the science.
 
 ## Install
@@ -42,6 +44,27 @@ Shift times live in `config.SHIFTS` (F 0515–1315 and N 1300–2100 local). Edi
 
 Grid JSON from the original scripts (`{"pts": [...], "data": [...]}`) still loads, as long as it contains the 400–200 hPa wind and height fields. Fetch new data with `fetch` to get the full set of fields.
 
+## OM/TMU/OS maps
+```bash
+python -m zjxwx nbm --date today --out nbm.npz                     # ~25 s, ~150 MB of range requests
+python -m zjxwx tmu gfs.json --nbm nbm.npz --date today --outdir tmu  # tmu_AM.png, tmu_PM.png, tmu_MID.png, tmu.json
+```
+The National Blend of Models is free on NOAA's AWS open-data bucket (`noaa-nbm-grib2-pds`), with no key or quota. Only the needed GRIB2 messages are downloaded, using the `.idx` byte offsets. NBM is used wherever it has the field. GFS covers what NBM lacks:
+
+| Area | Type | Source and rule (any hour of the period, thresholds in `config.DEFAULTS["tmu"]`) |
+|---|---|---|
+| Thunderstorms | Hazard | NBM 1-h thunder probability ≥ 25 % |
+| Severe turbulence | Hazard | GFS Ellrod–Knox DTI ≥ 12, FL240–FL390 |
+| Severe icing | Hazard | NBM freezing rain (1-h ice accretion ≥ 0.1 mm), or GFS icing potential ≥ 0.9 on ≥ 3 levels at once (a deep saturated supercooled layer) |
+| IFR / LIFR | Awareness | NBM P(ceiling < 1000 ft or vis < 3 SM) ≥ 40 %; LIFR cross-hatched where P(ceiling < 500 ft or vis < 1 SM) ≥ 40 %. Land only: NBM leaves these undefined over water |
+| Moderate turbulence | Awareness | GFS DTI ≥ 8, FL240–FL390 |
+| Moderate icing | Awareness | GFS icing potential ≥ 0.5 for ≥ 2 h, FL025–FL210 |
+| Low-level wind shear | Awareness | NBM LLWS diagnosed below 2,000 ft AGL |
+
+Why GFS for turbulence and icing: NBM v4 has no in-flight icing aloft. Its only upper-level turbulence field is an undocumented 0–3 Ellrod category for 400–300 hPa. Its low-level turbulence category (surface–4,500 ft) put "severe" and "extreme" over 6 % of ZJX on 6 Nov 2026, where 10 m winds were about 8 kt, so it is not used. Without an NBM file (or if the download fails), `tmu` still renders: thunderstorms and freezing rain fall back to GFS, and IFR/LIFR and LLWS show as unavailable.
+
+The side panel lists every item with the share of ZJX affected, the local hours and the altitudes. It also lists the ZJX airports that reach P(IFR) ≥ 40 %.
+
 ## Layout
 ```
 zjxwx/config.py       domain, shifts, thresholds, palette, disclaimer
@@ -51,6 +74,8 @@ zjxwx/analysis.py     shift windows (DST-aware), per-shift summaries, workload r
 zjxwx/geo.py          boundary, area-weighted airspace statistics, basemap
 zjxwx/render.py       briefing sheet and shift-string graphics
 zjxwx/fetch.py        Open-Meteo GFS client (batched, retried)
+zjxwx/nbm.py          NBM GRIB2 download from AWS open data (byte ranges), cut to the map extent
+zjxwx/tmu.py          OM/TMU/OS hazard and awareness maps
 zjxwx/synthetic.py    synthetic demo scenario
 tools/build_basemap.py  rebuilds the bundled Natural Earth extract
 tests/                physics and time-window checks (python -m pytest tests)
@@ -62,6 +87,7 @@ samples/              example output (synthetic data) and the original script's 
 
 1. Fetches six days of GFS (about 3,100 Open-Meteo weighted calls).
 2. Renders the next F and N briefing sheets and the 5-day F and N shift strings.
+   The 05:40Z (00:40 EST / 01:40 EDT) run and manual runs also download NBM and render the three OM/TMU/OS maps for the local day. The 17:40Z run carries the morning's maps forward unchanged, so they are issued once a day, well before 0500 local.
 3. Force-pushes the images, plus a `README.md` summary, to the **`briefings`** branch. They're also kept as a run artifact for 14 days.
 
 **Open-Meteo terms:** the free API is for non-commercial use and allows 10,000 weighted calls per day. Two scheduled runs and one manual run fit within that. For customer distribution, buy an Open-Meteo API subscription and add the key as the repository secret `OPEN_METEO_API_KEY`. The fetcher then switches to the customer endpoint automatically.
