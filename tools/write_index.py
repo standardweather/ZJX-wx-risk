@@ -16,6 +16,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from zjxwx.config import DISCLAIMER, STYLE  # noqa: E402
 
+TMU_COLORS = {"ts": STYLE["tmu"]["ts"], "turb_sev": STYLE["tmu"]["turb_sev"], "ice_sev": STYLE["tmu"]["ice_sev"],
+              "ifr": STYLE["tmu"]["ifr"], "turb_mod": STYLE["tmu"]["turb_mod"],
+              "ice_mod": STYLE["tmu"]["ice_mod"], "llws": STYLE["tmu"]["llws"]}
+
 SHIFT_NAMES = {"F": "F shift · 0515–1315 local", "N": "N shift · 1300–2100 local"}
 
 
@@ -30,6 +34,47 @@ def _chip(level):
 
 def _day(iso):
     return datetime.fromisoformat(iso).strftime("%a %d %b")
+
+
+def _tmu_chip(item):
+    color = TMU_COLORS.get(item["key"], "#5b6577")
+    tip = html.escape(" · ".join(x for x in (item["hours"], item["detail"]) if x))
+    return f'<span class="chip" style="--c:{color}" title="{tip}">{html.escape(item["name"])}</span>'
+
+
+def _tmu_section(out: Path, stamp: str):
+    """OM/TMU/OS hazard & awareness maps, produced each morning by 0500L."""
+    res = _load(out / "tmu" / "tmu.json")
+    if not res:
+        return "", []
+    blocks, md = [], ["## OM/TMU/OS", ""]
+    for p in res["periods"]:
+        hz = [i for i in p["items"] if i["present"] and i["kind"] == "HAZARD"]
+        aw = [i for i in p["items"] if i["present"] and i["kind"] == "AWARENESS"]
+        none = '<span class="why">none in ZJX</span>'
+        blocks.append(f"""
+  <h3>{html.escape(p["name"])} · {html.escape(p["local"])}</h3>
+  <p class="tmu-row"><strong>Hazard:</strong> {"".join(map(_tmu_chip, hz)) or none}</p>
+  <p class="tmu-row"><strong>Awareness:</strong> {"".join(map(_tmu_chip, aw)) or none}</p>
+  <a href="tmu/{p['image']}?v={stamp}"><img src="tmu/{p['image']}?v={stamp}"
+     alt="OM/TMU/OS {html.escape(p['name'])} map {html.escape(p['local'])}: hazards
+     {html.escape(', '.join(i['name'] for i in hz) or 'none')}; awareness
+     {html.escape(', '.join(i['name'] for i in aw) or 'none')}" loading="lazy"></a>""")
+        md += [f"### {p['name']} {p['local']}", "",
+               "Hazard: " + (", ".join(i["name"] for i in hz) or "none") + "  ",
+               "Awareness: " + (", ".join(i["name"] for i in aw) or "none"), "",
+               f"![{p['name']}](tmu/{p['image']})", ""]
+    issued = datetime.fromisoformat(res["issued"].replace("Z", "+00:00"))
+    html_out = f"""
+<section id="tmu">
+  <div class="sec-head">
+    <h2>OM/TMU/OS</h2>
+    <p><strong>{_day(res['day'])}</strong> · issued {issued:%H%MZ}
+       <span class="why">Solid = hazard · hatched = awareness</span></p>
+  </div>
+  {''.join(blocks)}
+</section>"""
+    return html_out, md
 
 
 def build(out: Path, note: str = ""):
@@ -64,7 +109,12 @@ def build(out: Path, note: str = ""):
         md += [f"## {code} shift, {b['date']}: **{b['workload']}**", "", b["reason"], "",
                f"![{code} briefing](brief_{code}.png)", "", f"![{code} shift string](string_{code}.png)", ""]
 
+    tmu_html, tmu_md = _tmu_section(out, stamp)
+    sections.append(tmu_html)
+    md += tmu_md
     nav = "".join(f'<a href="#{c}">{c} shift</a>' for c in ("F", "N") if (out / f"brief_{c}.json").exists())
+    if tmu_html:
+        nav += '<a href="#tmu">OM/TMU/OS</a>'
     page = f"""<!doctype html>
 <html lang="en">
 <head>
@@ -103,6 +153,9 @@ def build(out: Path, note: str = ""):
   th {{ color: var(--muted); font-weight: 600; font-size: 12px; }}
   td:first-child {{ white-space: nowrap; }}
   footer {{ padding: 0 16px 32px; color: var(--muted); font-size: 12px; }}
+  section h3 {{ margin: 18px 0 4px; font-size: 16px; }}
+  .tmu-row {{ margin: 2px 0; font-size: 13px; }}
+  .tmu-row .chip {{ margin-right: 4px; }}
   .note {{ background: #fff4e5; color: #6b4200; border-radius: 6px; padding: 8px 12px; margin-bottom: 16px; font-size: 13px; }}
 </style>
 </head>
@@ -110,7 +163,7 @@ def build(out: Path, note: str = ""):
 <header><div class="wrap">
   <div class="kicker">ZJX ARTCC · PRE-SHIFT WEATHER &amp; WORKLOAD BRIEFINGS</div>
   <h1>Latest shift briefings</h1>
-  <div class="meta">Updated {now:%a %d %b %Y %H%MZ} from GFS via Open-Meteo · refreshes after the 00Z and 12Z model runs</div>
+  <div class="meta">Updated {now:%a %d %b %Y %H%MZ} from GFS via Open-Meteo, plus NBM for the OM/TMU/OS maps · refreshes after the 00Z and 12Z model runs</div>
   <nav>{nav}</nav>
 </div></header>
 <main>

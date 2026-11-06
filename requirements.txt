@@ -3,3 +3,4 @@ scipy>=1.11
 matplotlib>=3.8
 shapely>=2.0
 cartopy>=0.23
+eccodes>=2.37     # GRIB2 decoding for NBM (ships its own binary library)

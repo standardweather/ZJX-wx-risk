@@ -33,6 +33,14 @@ SHIFTS = {
     "N": Shift("N", "Evening", "13:00", "21:00"),
 }
 
+# OM/TMU/OS planning maps: three periods covering one operational day,
+# issued once each morning before the first one starts.
+TMU_PERIODS = (
+    Shift("AM", "Morning", "05:00", "13:00"),
+    Shift("PM", "Afternoon", "13:00", "21:00"),
+    Shift("MID", "Overnight", "21:00", "05:00"),
+)
+
 # Pressure levels. Cruise (FL240-FL450) layers for CAT; low/mid levels for icing.
 CAT_LEVELS = (400, 350, 300, 250, 200)          # layers taken between neighbours
 # 925-450 hPa (~FL025-FL210). Kept to 10 levels so a fetch is 40 variables,
@@ -77,6 +85,42 @@ DEFAULTS = {
         "precip_min": 1.0,       # mm/h (convective or total)
         "cape_strong": 2000.0,
     },
+    # OM/TMU/OS hazard and awareness maps (zjxwx/tmu.py). An area is drawn
+    # where the condition is met in at least one hour of the period.
+    "tmu": {
+        # HAZARD: thunderstorms. NBM 1-h thunder probability (%), any hour,
+        # or the GFS thunderstorm signal (see "convection")...
+        "ts_prob": 25,
+        # ...or HRRR simulated echo top >= hrrr_top_kft or any lightning
+        # threat (> hrrr_ltng flashes/km2/5 min), widened by hrrr_radius_km
+        # for placement error. Any one source flags an area (see tmu._thunder).
+        "hrrr_top_kft": 30, "hrrr_ltng": 0.0, "hrrr_radius_km": 20,
+        # HAZARD: severe clear-air turbulence; AWARENESS: moderate.
+        # GFS Ellrod-Knox DTI over FL240-FL390 (1e-7 s^-2, see "turbulence").
+        "turb_severe_dti": 12, "turb_moderate_dti": 8,
+        # HAZARD: severe icing. Either freezing rain (NBM 1-h ice accretion,
+        # mm, or the GFS warm-nose test without NBM), or a deep saturated
+        # supercooled layer: GFS icing potential >= ice_severe_potential on
+        # >= ice_severe_levels pressure levels at once (~5,000 ft deep).
+        "fzra_mm": 0.1,
+        "ice_severe_potential": 0.9, "ice_severe_levels": 3,
+        # AWARENESS: moderate icing. GFS icing potential >= the icing
+        # potential_threshold for at least this many hours.
+        "ice_moderate_hours": 2,
+        # AWARENESS: IFR/LIFR. NBM probability (%) of ceiling < 1000 ft or
+        # visibility < 3 SM (IFR), ceiling < 500 ft or visibility < 1 SM (LIFR).
+        "ifr_prob": 40, "lifr_prob": 40,
+        # AWARENESS: low-level wind shear. NBM LLWS (surface-2000 ft AGL)
+        # diagnosed in at least this many hours.
+        "llws_hours": 1,
+        # Ignore specks: an area must cover at least this fraction of the
+        # ZJX airspace to be listed as present.
+        "min_area": 0.002,
+        # Map display: close gaps narrower than close_km, drop areas smaller
+        # than min_area_km2, then smooth edges over smooth_km, so the map
+        # shows broad areas rather than grid-point detail.
+        "close_km": 20, "min_area_km2": 5000, "smooth_km": 15,
+    },
     # Workload rules use the fraction of ZJX airspace (area-weighted) meeting a
     # condition. Each hazard maps to 0 LOW / 1 MODERATE / 2 HIGH.
     "workload": {
@@ -113,6 +157,11 @@ STYLE = {
     "ice": "#1565c0",
     "jet": "#6b5b95",
     "fzlvl": "#00838f",
+    # OM/TMU/OS maps: hazards are solid, awareness areas hatched.
+    "tmu": {
+        "ts": "#d7263d", "turb_sev": "#8d3b0b", "ice_sev": "#283593",
+        "ifr": "#8e24aa", "turb_mod": "#e8871e", "ice_mod": "#1e88e5", "llws": "#00897b",
+    },
 }
 
 AIRPORTS = {  # id: (lon, lat)
