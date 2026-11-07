@@ -2,27 +2,58 @@ name: ZJX briefings
 
 on:
   schedule:
-    # Open-Meteo has the 00Z and 12Z GFS cycles by ~05Z / ~17Z. The morning
-    # run waits until 07:30Z (02:30 EST / 03:30 EDT) so the OM/TMU/OS maps
-    # get the 05Z HRRR and 06Z NBM, and still publish well before 0500 local.
+    # Morning: three tries for the OM/TMU/OS maps (01:15-03:45 EST /
+    # 02:15-04:45 EDT). GitHub starts scheduled runs late (4-8 h was seen in
+    # Nov 2026) and sometimes drops them, so the first one to start does the
+    # work and the later ones exit straight away (see the plan job).
+    - cron: "15 6 * * *"
     - cron: "30 7 * * *"
+    - cron: "45 8 * * *"
+    # Evening refresh of the briefing sheets (12Z GFS).
     - cron: "40 17 * * *"
   workflow_dispatch:
 
 permissions:
   contents: write
 
-env:
-  # The OM/TMU/OS maps are issued once each morning (07:30Z run) and on
-  # manual runs. The evening run carries the morning's maps forward unchanged.
-  TMU: ${{ github.event_name == 'workflow_dispatch' || github.event.schedule == '30 7 * * *' }}
-
 concurrency:
   group: briefings
   cancel-in-progress: false
 
 jobs:
+  # Decide what this run does from what is already published:
+  #  - manual run: everything, including fresh OM/TMU/OS maps;
+  #  - morning schedule: everything if today's maps are not out yet, else nothing;
+  #  - evening schedule: briefings, plus the maps only if the morning never made them.
+  plan:
+    runs-on: ubuntu-24.04
+    outputs:
+      run: ${{ steps.plan.outputs.run }}
+      tmu: ${{ steps.plan.outputs.tmu }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: plan
+        env:
+          EVENT: ${{ github.event_name }}
+          SCHED: ${{ github.event.schedule }}
+        run: |
+          TODAY=$(TZ=America/New_York date +%F)
+          PUB=$( (git fetch -q --depth 1 origin briefings && git show FETCH_HEAD:tmu/tmu.json \
+                  | python3 -c 'import json,sys; print(json.load(sys.stdin)["day"])') 2>/dev/null || echo none)
+          if [ "$EVENT" = workflow_dispatch ]; then run=true; tmu=true
+          elif [ "$SCHED" = "40 17 * * *" ]; then run=true; if [ "$PUB" = "$TODAY" ]; then tmu=false; else tmu=true; fi
+          elif [ "$PUB" = "$TODAY" ]; then run=false; tmu=false
+          else run=true; tmu=true
+          fi
+          echo "today=$TODAY published=$PUB event=$EVENT schedule='$SCHED' -> run=$run tmu=$tmu"
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+          echo "tmu=$tmu" >> "$GITHUB_OUTPUT"
+
   briefings:
+    needs: plan
+    if: needs.plan.outputs.run == 'true'
+    env:
+      TMU: ${{ needs.plan.outputs.tmu }}
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
