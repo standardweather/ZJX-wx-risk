@@ -253,9 +253,5 @@ def assess(s: Summary, mask, cfg) -> Workload:
     level = max(h.level for h in out)
     top = [h for h in out if h.level == level and h.level > 0]
     reason = "; ".join(f"{h.name}: {h.driver}" for h in top) if top else "No hazard reaches moderate thresholds"
-    n_mod = sum(h.level == 1 for h in out)
-    if level == 1 and n_mod >= wl["compound_moderates"]:
-        level = 2
-        reason = f"{n_mod} moderate hazards combined (" + ", ".join(h.name for h in out if h.level == 1) + ")"
     return Workload(level, out, reason)
 

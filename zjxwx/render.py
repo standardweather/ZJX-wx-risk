@@ -439,8 +439,6 @@ def shift_string(grid, summaries, ratings, boundary, cfg, out, issued=None, dpi=
 
 
 def _short_reason(r):
-    if r.level == 2 and all(h.level < 2 for h in r.hazards):
-        return r.reason  # compound rule fired
     top = [h for h in r.hazards if h.level == r.level and h.level > 0]
     if not top:
         return "No hazard reaches moderate thresholds"

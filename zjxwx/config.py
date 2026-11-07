@@ -126,11 +126,10 @@ DEFAULTS = {
     "workload": {
         "convection": {"high": [[4, 0.33], [1, 0.40]], "moderate": [[1, 0.15]]},
         # Turbulence counts from moderate (DTI >= 8) up; light (4-8) does not drive workload.
-        "turbulence": {"high": [[8, 0.33], [12, 0.05]], "moderate": [[8, 0.15]]},
+        "turbulence": {"high": [[8, 0.33], [12, 0.05]], "moderate": [[8, 0.15], [12, 0.01]]},
         "icing": {"high": [[6, 0.40]], "moderate": [[3, 0.25]], "fzra_high_frac": 0.02},
-        "precip": {"high": [[50.8, 0.15]], "moderate": [[25.4, 0.15]]},
-        # Two or more MODERATE hazards together raise the overall rating to HIGH.
-        "compound_moderates": 2,
+        "precip": {"high": [[50.8, 0.10]], "moderate": [[25.4, 0.15]]},
+        # The overall rating is the highest single hazard: HIGH only when one hazard is HIGH.
     },
 }
 
