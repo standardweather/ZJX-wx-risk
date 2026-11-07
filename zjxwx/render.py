@@ -197,7 +197,7 @@ def layer_turbulence(ax, grid, s, levels, compact=False):
     cf = ax.contourf(X, Y, D, levels=shaded + [1e3], colors=S["turb"][1:1 + len(shaded)], alpha=0.85,
                      transform=PC, zorder=2)
     ax.contour(X, Y, D, levels=shaded, colors=[S["turb"][2]] * len(shaded),
-               linewidths=[0.9, 1.4][:len(shaded)], transform=PC, zorder=2.5)
+               linewidths=[0.9, 1.4, 1.8][:len(shaded)], transform=PC, zorder=2.5)
     if s.jet_u is not None and not compact:
         spd = np.hypot(s.jet_u, s.jet_v) * 1.943844
         X2, Y2, J = _fine(grid, spd)
@@ -267,8 +267,9 @@ def briefing_sheet(grid, s, wl, boundary, mask, cfg, out, issued=None, dpi=170):
     _panel_title(fig, axB, "B", "Clear-air turbulence, FL240–FL390",
                  f"Max Ellrod–Knox DTI over shift · 250 hPa jet at {s.jet_time:%H%MZ}")
     _legend_row(fig, axB, [
-        Patch(facecolor=S["turb"][1], label=f"DTI {tl[1]}–{tl[2]}  moderate"),
-        Patch(facecolor=S["turb"][2], label=f"≥ {tl[2]}  mod–severe"),
+        Patch(facecolor=S["turb"][1], label=f"DTI {tl[1]}–{tl[2]} moderate"),
+        Patch(facecolor=S["turb"][2], label=f"{tl[2]}–{tl[3]} severe"),
+        Patch(facecolor=S["turb"][3], label=f"≥ {tl[3]} extreme"),
         Line2D([], [], color=S["jet"], lw=1, ls="--", label="Isotachs (kt)")], ncol=4)
 
     cfC = layer_icing(axC, grid, s)

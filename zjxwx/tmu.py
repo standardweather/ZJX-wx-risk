@@ -183,6 +183,9 @@ def analyse(window, diag, mask, nbm=None, nbm_mask=None, cfg=None, hrrr=None):
 
     el = Element("turb_sev", "HAZARD", "Severe turbulence (CAT)", C["turb_sev"], None, "GFS")
     out.append(gfs_elem(el, diag.dti[inst], sev, s.dti_max, turb_detail(sev)))
+    ext = t["turb_extreme_dti"]
+    el = Element("turb_ext", "HAZARD", "Extreme turbulence (CAT)", C["turb_ext"], None, "GFS")
+    out.append(gfs_elem(el, diag.dti[inst], ext, s.dti_max, turb_detail(ext)))
 
     # ---- HAZARD: severe icing (freezing rain or deep supercooled layer) --
     sev_cube = _severe_ice_cube(diag)[inst].astype(float)
@@ -603,7 +606,7 @@ def render(window, summary, elements, boundary, out, sources, issued=None, dpi=1
                 f"Issued {issued:%a %d %b %H%MZ}", None, height=0.105)
 
     ax = _map_axes(fig, [0.015, 0.075, 0.60, y - 0.09])
-    order = ["ice_mod", "turb_mod", "llws", "ifr", "ice_sev", "turb_sev", "ts"]
+    order = ["ice_mod", "turb_mod", "llws", "ifr", "ice_sev", "turb_sev", "turb_ext", "ts"]
     by = {e.key: e for e in elements}
     for k, key in enumerate(order):
         if key in by:
