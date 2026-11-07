@@ -162,7 +162,7 @@ def summarize(diag: Diagnostics, window: Window, mask=None) -> Summary:
                 fzra_hours, fzl,
                 mid, jet_u, jet_v, missing=missing)
     if mask is not None:
-        lvl = cfg["turbulence"]["levels"][0]
+        lvl = cfg["turbulence"]["levels"][1]  # moderate
         s.series = {
             "Thunderstorms": mask.frac_series(diag.ts[inst], 0.5) if diag.ts is not None else None,
             f"Turbulence (DTI ≥ {lvl})": mask.frac_series(dti, lvl),
@@ -227,7 +227,7 @@ def assess(s: Summary, mask, cfg) -> Workload:
                      lambda t, f: f"DTI ≥{t:g} over {f:.0%} of airspace")
     imax = np.nanargmax(np.where(np.isfinite(s.dti_max), s.dti_max, -1))
     detail = (f"DTI max {mask.max(s.dti_max):.0f} near FL{s.dti_fl.ravel()[imax]:.0f} · "
-              f"{mask.frac_ge(s.dti_max, 4):.0%} of airspace ≥4")
+              f"{mask.frac_ge(s.dti_max, 8):.0%} of airspace ≥8")
     out.append(HazardRating("Turbulence (CAT)", lvl, detail, why))
 
     ic = wl["icing"]
@@ -247,15 +247,11 @@ def assess(s: Summary, mask, cfg) -> Workload:
     mm = s.precip_in * 25.4
     lvl, why = _rate(mm, wl["precip"], mask,
                      lambda t, f: f">{t / 25.4:.1f} in over {f:.0%} of airspace")
-    detail = f"max {mask.max(s.precip_in):.2f} in · {mask.frac_ge(mm, 12.7):.0%} of airspace >0.5 in"
+    detail = f"max {mask.max(s.precip_in):.2f} in · {mask.frac_ge(mm, 25.4):.0%} of airspace >1 in"
     out.append(HazardRating("Heavy precipitation", lvl, detail, why))
 
     level = max(h.level for h in out)
     top = [h for h in out if h.level == level and h.level > 0]
     reason = "; ".join(f"{h.name}: {h.driver}" for h in top) if top else "No hazard reaches moderate thresholds"
-    n_mod = sum(h.level == 1 for h in out)
-    if level == 1 and n_mod >= wl["compound_moderates"]:
-        level = 2
-        reason = f"{n_mod} moderate hazards combined (" + ", ".join(h.name for h in out if h.level == 1) + ")"
     return Workload(level, out, reason)
 

@@ -192,10 +192,12 @@ def layer_precip_ts(ax, grid, s, compact=False):
 
 def layer_turbulence(ax, grid, s, levels, compact=False):
     X, Y, D = _fine(grid, s.dti_max)
-    lv = list(levels) + [1e3]
-    cf = ax.contourf(X, Y, D, levels=lv, colors=S["turb"], alpha=0.85, transform=PC, zorder=2)
-    ax.contour(X, Y, D, levels=levels, colors=[S["turb"][1], S["turb"][2], S["turb"][2]],
-               linewidths=[0.5, 0.9, 1.4], transform=PC, zorder=2.5)
+    # Light turbulence (DTI below levels[1]) is not shaded: shading starts at moderate.
+    shaded = list(levels[1:])
+    cf = ax.contourf(X, Y, D, levels=shaded + [1e3], colors=S["turb"][1:1 + len(shaded)], alpha=0.85,
+                     transform=PC, zorder=2)
+    ax.contour(X, Y, D, levels=shaded, colors=[S["turb"][2]] * len(shaded),
+               linewidths=[0.9, 1.4, 1.8][:len(shaded)], transform=PC, zorder=2.5)
     if s.jet_u is not None and not compact:
         spd = np.hypot(s.jet_u, s.jet_v) * 1.943844
         X2, Y2, J = _fine(grid, spd)
@@ -265,9 +267,9 @@ def briefing_sheet(grid, s, wl, boundary, mask, cfg, out, issued=None, dpi=170):
     _panel_title(fig, axB, "B", "Clear-air turbulence, FL240–FL390",
                  f"Max Ellrod–Knox DTI over shift · 250 hPa jet at {s.jet_time:%H%MZ}")
     _legend_row(fig, axB, [
-        Patch(facecolor=S["turb"][0], label=f"DTI {tl[0]}–{tl[1]}  light–mod"),
-        Patch(facecolor=S["turb"][1], label=f"{tl[1]}–{tl[2]}  moderate"),
-        Patch(facecolor=S["turb"][2], label=f"≥ {tl[2]}  mod–severe"),
+        Patch(facecolor=S["turb"][1], label=f"DTI {tl[1]}–{tl[2]} moderate"),
+        Patch(facecolor=S["turb"][2], label=f"{tl[2]}–{tl[3]} severe"),
+        Patch(facecolor=S["turb"][3], label=f"≥ {tl[3]} extreme"),
         Line2D([], [], color=S["jet"], lw=1, ls="--", label="Isotachs (kt)")], ncol=4)
 
     cfC = layer_icing(axC, grid, s)
@@ -437,8 +439,6 @@ def shift_string(grid, summaries, ratings, boundary, cfg, out, issued=None, dpi=
 
 
 def _short_reason(r):
-    if r.level == 2 and all(h.level < 2 for h in r.hazards):
-        return r.reason  # compound rule fired
     top = [h for h in r.hazards if h.level == r.level and h.level > 0]
     if not top:
         return "No hazard reaches moderate thresholds"

@@ -56,7 +56,7 @@ LEVEL_FL = {925: 25, 850: 50, 800: 65, 750: 80, 700: 100, 650: 115, 600: 140,
 DEFAULTS = {
     "turbulence": {
         # Ellrod & Knapp (1992) TI1 units: 1e-7 s^-2. AWC-style guidance bins.
-        "levels": [4, 8, 12],
+        "levels": [4, 8, 12, 16],   # light / moderate / severe / extreme
         # Ellrod & Knox (2010) divergence-trend term: DVT = C * dDIV over dt.
         # C = 0.1 was "subjectively assigned" for a 6 h interval; the authors
         # proposed scaling C with the interval, which we do (C * dt/6h).
@@ -97,7 +97,7 @@ DEFAULTS = {
         "hrrr_top_kft": 30, "hrrr_ltng": 0.0, "hrrr_radius_km": 20,
         # HAZARD: severe clear-air turbulence; AWARENESS: moderate.
         # GFS Ellrod-Knox DTI over FL240-FL390 (1e-7 s^-2, see "turbulence").
-        "turb_severe_dti": 12, "turb_moderate_dti": 8,
+        "turb_extreme_dti": 16, "turb_severe_dti": 12, "turb_moderate_dti": 8,
         # HAZARD: severe icing. Either freezing rain (NBM 1-h ice accretion,
         # mm, or the GFS warm-nose test without NBM), or a deep saturated
         # supercooled layer: GFS icing potential >= ice_severe_potential on
@@ -124,12 +124,12 @@ DEFAULTS = {
     # Workload rules use the fraction of ZJX airspace (area-weighted) meeting a
     # condition. Each hazard maps to 0 LOW / 1 MODERATE / 2 HIGH.
     "workload": {
-        "convection": {"high": [[3, 0.20], [1, 0.40]], "moderate": [[1, 0.08]]},
-        "turbulence": {"high": [[8, 0.15], [12, 0.03]], "moderate": [[4, 0.10], [8, 0.03]]},
+        "convection": {"high": [[4, 0.33], [1, 0.40]], "moderate": [[1, 0.15]]},
+        # Turbulence counts from moderate (DTI >= 8) up; light (4-8) does not drive workload.
+        "turbulence": {"high": [[8, 0.33], [12, 0.05]], "moderate": [[8, 0.15], [12, 0.01]]},
         "icing": {"high": [[6, 0.40]], "moderate": [[3, 0.25]], "fzra_high_frac": 0.02},
-        "precip": {"high": [[25.4, 0.10]], "moderate": [[12.7, 0.10]]},
-        # Two or more MODERATE hazards together raise the overall rating to HIGH.
-        "compound_moderates": 2,
+        "precip": {"high": [[50.8, 0.10]], "moderate": [[25.4, 0.15]]},
+        # The overall rating is the highest single hazard: HIGH only when one hazard is HIGH.
     },
 }
 
@@ -153,13 +153,13 @@ STYLE = {
                       "#0b6a3a", "#2c5e8f", "#5a3e9b"],
     "precip_levels_in": [0.01, 0.05, 0.10, 0.25, 0.50, 1.00, 1.50, 2.00, 3.00],
     "ts": "#d7263d",
-    "turb": ["#f6c87a", "#e8871e", "#a6400b"],
+    "turb": ["#f6c87a", "#e8871e", "#a6400b", "#5a1608"],
     "ice": "#1565c0",
     "jet": "#6b5b95",
     "fzlvl": "#00838f",
     # OM/TMU/OS maps: hazards are solid, awareness areas hatched.
     "tmu": {
-        "ts": "#d7263d", "turb_sev": "#8d3b0b", "ice_sev": "#283593",
+        "ts": "#d7263d", "turb_sev": "#a6400b", "turb_ext": "#5a1608", "ice_sev": "#283593",
         "ifr": "#8e24aa", "turb_mod": "#e8871e", "ice_mod": "#1e88e5", "llws": "#00897b",
     },
 }

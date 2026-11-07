@@ -16,7 +16,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from zjxwx.config import DISCLAIMER, STYLE  # noqa: E402
 
-TMU_COLORS = {"ts": STYLE["tmu"]["ts"], "turb_sev": STYLE["tmu"]["turb_sev"], "ice_sev": STYLE["tmu"]["ice_sev"],
+TMU_COLORS = {"ts": STYLE["tmu"]["ts"], "turb_sev": STYLE["tmu"]["turb_sev"], "turb_ext": STYLE["tmu"]["turb_ext"], "ice_sev": STYLE["tmu"]["ice_sev"],
               "ifr": STYLE["tmu"]["ifr"], "turb_mod": STYLE["tmu"]["turb_mod"],
               "ice_mod": STYLE["tmu"]["ice_mod"], "llws": STYLE["tmu"]["llws"]}
 

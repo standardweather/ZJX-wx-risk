@@ -5,7 +5,7 @@ This package turns GFS output from Open-Meteo into two products for ZJX ARTCC:
 * **Briefing sheet** (`brief`): one shift. It has three hazard maps (precipitation and thunderstorms, clear-air turbulence for FL240–FL390, and icing potential with the freezing level), a workload scorecard and an hourly hazard-coverage timeline.
 * **Shift-string outlook** (`string`): several days of the same shift. It has a hazard × day calendar strip and a composite map for each day.
 
-* **OM/TMU/OS maps** (`nbm` + `tmu`): one simple ZJX map for each of 0500–1300, 1300–2100 and 2100–0500 local, issued once each morning. Each shows **hazard** areas (thunderstorms, severe turbulence, severe icing) and **awareness** areas (IFR/LIFR, moderate turbulence, moderate icing, low-level wind shear). See [OM/TMU/OS maps](#omtmuos-maps).
+* **OM/TMU/OS maps** (`nbm` + `tmu`): one simple ZJX map for each of 0500–1300, 1300–2100 and 2100–0500 local, issued once each morning. Each shows **hazard** areas (thunderstorms, severe and extreme turbulence, severe icing) and **awareness** areas (IFR/LIFR, moderate turbulence, moderate icing, low-level wind shear). See [OM/TMU/OS maps](#omtmuos-maps).
 
 It replaces `original/make_gfs_map.py` and `original/make_string_panel.py`. See [CRITIQUE.md](CRITIQUE.md) for the bugs that were fixed and the reasoning behind the science.
 
@@ -55,10 +55,11 @@ The National Blend of Models is free on NOAA's AWS open-data bucket (`noaa-nbm-g
 | Area | Type | Source and rule (any hour of the period, thresholds in `config.DEFAULTS["tmu"]`) |
 |---|---|---|
 | Thunderstorms | Hazard | Any of: HRRR echo top ≥ 30 kft or lightning (widened 20 km for placement error); NBM 1-h thunder probability ≥ 25 %; GFS thunderstorm signal (CAPE, LI, precip) |
-| Severe turbulence | Hazard | GFS Ellrod–Knox DTI ≥ 12, FL240–FL390 |
+| Extreme turbulence | Hazard | GFS Ellrod–Knox DTI ≥ 16, FL240–FL390 |
+| Severe turbulence | Hazard | GFS DTI 12–16, FL240–FL390 |
 | Severe icing | Hazard | NBM freezing rain (1-h ice accretion ≥ 0.1 mm), or GFS icing potential ≥ 0.9 on ≥ 3 levels at once (a deep saturated supercooled layer) |
 | IFR / LIFR | Awareness | NBM P(ceiling < 1000 ft or vis < 3 SM) ≥ 40 %; LIFR cross-hatched where P(ceiling < 500 ft or vis < 1 SM) ≥ 40 %. Land only: NBM leaves these undefined over water |
-| Moderate turbulence | Awareness | GFS DTI ≥ 8, FL240–FL390 |
+| Moderate turbulence | Awareness | GFS DTI 8–12, FL240–FL390 |
 | Moderate icing | Awareness | GFS icing potential ≥ 0.5 for ≥ 2 h, FL025–FL210 |
 | Low-level wind shear | Awareness | NBM LLWS diagnosed below 2,000 ft AGL |
 

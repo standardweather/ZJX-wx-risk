@@ -60,7 +60,7 @@ def test_tmu_renders_from_synthetic_gfs_only(tmp_path):
     for p in res["periods"]:
         assert (tmp_path / "t" / p["image"]).stat().st_size > 10_000
         kinds = [i["kind"] for i in p["items"]]
-        assert kinds.count("HAZARD") == 3 and kinds.count("AWARENESS") == 4
+        assert kinds.count("HAZARD") == 4 and kinds.count("AWARENESS") == 4
         ifr = next(i for i in p["items"] if i["key"] == "ifr")
         assert not ifr["available"]  # no NBM file
 
