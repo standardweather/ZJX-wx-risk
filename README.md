@@ -89,11 +89,13 @@ samples/              example output (synthetic data) and the original script's 
 ```
 
 ## Automated runs (GitHub Actions)
-`.github/workflows/briefings.yml` runs at 07:30Z and 17:40Z, after Open-Meteo has the 00Z and 12Z GFS cycles. You can also start it by hand from the **Actions** tab ("Run workflow"). Each run does three things:
+`.github/workflows/briefings.yml` runs in the morning (06:15Z, 07:30Z or 08:45Z, whichever GitHub starts first) and at 17:40Z, after Open-Meteo has the 00Z and 12Z GFS cycles. You can also start it by hand from the **Actions** tab ("Run workflow"). Each run does three things:
 
 1. Fetches six days of GFS (about 3,100 Open-Meteo weighted calls).
 2. Renders the next F and N briefing sheets and the 5-day F and N shift strings.
-   The morning run is at 07:30Z (02:30 EST / 03:30 EDT), so it gets the 05Z HRRR and 06Z NBM. It and manual runs also download HRRR and NBM and render the three OM/TMU/OS maps for the local day. The 17:40Z run carries the morning's maps forward unchanged, so they are issued once a day, before 0500 local.
+   The OM/TMU/OS maps are made once a day. The morning is scheduled three times (06:15Z, 07:30Z and 08:45Z, i.e. 01:15–03:45 EST), because GitHub starts scheduled runs late and sometimes drops them. The first run to start makes the maps and the others exit at once. The 17:40Z run carries the morning's maps forward, or makes them if no morning run happened. Manual runs always make fresh maps.
+
+   **GitHub's scheduler is best-effort.** In Nov 2026 scheduled runs here started 4–8 hours late, and on 7 Nov the morning run never started. For a hard 0500L deadline, trigger the workflow from an external cron service (see below).
 3. Force-pushes the images, plus a `README.md` summary, to the **`briefings`** branch. They're also kept as a run artifact for 14 days.
 
 **Open-Meteo terms:** the free API is for non-commercial use and allows 10,000 weighted calls per day. Two scheduled runs and one manual run fit within that. For customer distribution, buy an Open-Meteo API subscription and add the key as the repository secret `OPEN_METEO_API_KEY`. The fetcher then switches to the customer endpoint automatically.
