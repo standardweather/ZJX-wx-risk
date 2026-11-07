@@ -162,7 +162,7 @@ def summarize(diag: Diagnostics, window: Window, mask=None) -> Summary:
                 fzra_hours, fzl,
                 mid, jet_u, jet_v, missing=missing)
     if mask is not None:
-        lvl = cfg["turbulence"]["levels"][0]
+        lvl = cfg["turbulence"]["levels"][1]  # moderate
         s.series = {
             "Thunderstorms": mask.frac_series(diag.ts[inst], 0.5) if diag.ts is not None else None,
             f"Turbulence (DTI ≥ {lvl})": mask.frac_series(dti, lvl),
@@ -227,7 +227,7 @@ def assess(s: Summary, mask, cfg) -> Workload:
                      lambda t, f: f"DTI ≥{t:g} over {f:.0%} of airspace")
     imax = np.nanargmax(np.where(np.isfinite(s.dti_max), s.dti_max, -1))
     detail = (f"DTI max {mask.max(s.dti_max):.0f} near FL{s.dti_fl.ravel()[imax]:.0f} · "
-              f"{mask.frac_ge(s.dti_max, 4):.0%} of airspace ≥4")
+              f"{mask.frac_ge(s.dti_max, 8):.0%} of airspace ≥8")
     out.append(HazardRating("Turbulence (CAT)", lvl, detail, why))
 
     ic = wl["icing"]
