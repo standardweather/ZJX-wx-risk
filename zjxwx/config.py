@@ -124,11 +124,11 @@ DEFAULTS = {
     # Workload rules use the fraction of ZJX airspace (area-weighted) meeting a
     # condition. Each hazard maps to 0 LOW / 1 MODERATE / 2 HIGH.
     "workload": {
-        "convection": {"high": [[3, 0.20], [1, 0.40]], "moderate": [[1, 0.08]]},
+        "convection": {"high": [[4, 0.33], [1, 0.40]], "moderate": [[1, 0.15]]},
         # Turbulence counts from moderate (DTI >= 8) up; light (4-8) does not drive workload.
-        "turbulence": {"high": [[8, 0.15], [12, 0.03]], "moderate": [[8, 0.03]]},
+        "turbulence": {"high": [[8, 0.33], [12, 0.05]], "moderate": [[8, 0.15]]},
         "icing": {"high": [[6, 0.40]], "moderate": [[3, 0.25]], "fzra_high_frac": 0.02},
-        "precip": {"high": [[25.4, 0.10]], "moderate": [[12.7, 0.10]]},
+        "precip": {"high": [[50.8, 0.15]], "moderate": [[25.4, 0.15]]},
         # Two or more MODERATE hazards together raise the overall rating to HIGH.
         "compound_moderates": 2,
     },

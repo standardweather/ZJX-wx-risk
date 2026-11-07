@@ -247,7 +247,7 @@ def assess(s: Summary, mask, cfg) -> Workload:
     mm = s.precip_in * 25.4
     lvl, why = _rate(mm, wl["precip"], mask,
                      lambda t, f: f">{t / 25.4:.1f} in over {f:.0%} of airspace")
-    detail = f"max {mask.max(s.precip_in):.2f} in · {mask.frac_ge(mm, 12.7):.0%} of airspace >0.5 in"
+    detail = f"max {mask.max(s.precip_in):.2f} in · {mask.frac_ge(mm, 25.4):.0%} of airspace >1 in"
     out.append(HazardRating("Heavy precipitation", lvl, detail, why))
 
     level = max(h.level for h in out)
