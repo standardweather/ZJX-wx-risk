@@ -13,6 +13,7 @@ variables (and per 2 weeks of data). The free tier allows 600/min,
 """
 from __future__ import annotations
 
+import http.client
 import json
 import math
 import os
@@ -71,11 +72,16 @@ def _get(params, api, retries=5, log=print):
             if k == retries:
                 raise
             time.sleep(wait)
-        except (urllib.error.URLError, TimeoutError) as e:
+        except (urllib.error.URLError, TimeoutError, ConnectionError,
+                http.client.HTTPException, ValueError) as e:
+            # ValueError covers json.JSONDecodeError: Open-Meteo sometimes
+            # drops the connection part-way through a large batch response,
+            # leaving truncated JSON (seen 9 Nov 2026).
             if k == retries:
                 raise
-            log(f"  network error {e}; retry in {2 ** (k + 1)}s")
-            time.sleep(2 ** (k + 1))
+            wait = 2 ** (k + 1)
+            log(f"  network error ({type(e).__name__}: {str(e)[:120]}); retry in {wait}s")
+            time.sleep(wait)
 
 
 def _reason(body):
