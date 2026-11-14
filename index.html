@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="refresh" content="1800">
+<title>ZJX Shift Briefings</title>
+<style>
+  :root {
+    --navy: #0b2545; --ink: #1d2433; --muted: #5b6577;
+    --rule: #d5dae3; --paper: #f4f6f9; --card: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --ink: #e6e9ef; --muted: #a3acbb; --rule: #2c3446; --paper: #0e1320; --card: #161c2b; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink);
+         font: 15px/1.5 Inter, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { background: var(--navy); color: #fff; padding: 20px 16px; }
+  header .wrap, main, footer { max-width: 1200px; margin: 0 auto; }
+  header .kicker { color: #9fb3d1; font-size: 12px; font-weight: 600; letter-spacing: .04em; }
+  header h1 { margin: 4px 0; font-size: 26px; }
+  header .meta { color: #d8e1ee; font-size: 13px; }
+  nav { margin-top: 12px; display: flex; gap: 8px; }
+  nav a { color: #fff; text-decoration: none; border: 1px solid #ffffff55; border-radius: 6px; padding: 4px 12px; font-size: 13px; }
+  main { padding: 16px; }
+  section { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 16px; margin-bottom: 24px; }
+  .sec-head h2 { margin: 0 0 4px; font-size: 20px; }
+  .sec-head p { margin: 0 0 12px; }
+  .why { color: var(--muted); font-size: 13px; margin-left: 6px; }
+  img { width: 100%; height: auto; display: block; border-radius: 6px; border: 1px solid var(--rule); margin: 8px 0 16px; background: #fff; }
+  .chip { display: inline-block; background: var(--c); color: #fff; font-weight: 700; font-size: 12px;
+           border-radius: 4px; padding: 1px 8px; letter-spacing: .02em; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 4px 0 8px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; }
+  td:first-child { white-space: nowrap; }
+  footer { padding: 0 16px 32px; color: var(--muted); font-size: 12px; }
+  section h3 { margin: 18px 0 4px; font-size: 16px; }
+  .tmu-row { margin: 2px 0; font-size: 13px; }
+  .tmu-row .chip { margin-right: 4px; }
+  .note { background: #fff4e5; color: #6b4200; border-radius: 6px; padding: 8px 12px; margin-bottom: 16px; font-size: 13px; }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="kicker">ZJX ARTCC · PRE-SHIFT WEATHER &amp; WORKLOAD BRIEFINGS</div>
+  <h1>Latest shift briefings</h1>
+  <div class="meta">Updated Sat 14 Nov 2026 0741Z from GFS via Open-Meteo, plus NBM for the OM/TMU/OS maps · refreshes after the 00Z and 12Z model runs</div>
+  <nav><a href="#F">F shift</a><a href="#N">N shift</a><a href="#tmu">OM/TMU/OS</a></nav>
+</div></header>
+<main>
+  
+  
+<section id="F">
+  <div class="sec-head">
+    <h2>F shift · 0515–1315 local</h2>
+    <p>Next shift: <strong>Sat 14 Nov</strong> <span class="chip" style="--c:#c62828">HIGH</span>
+       <span class="why">Turbulence (CAT): DTI ≥8 over 34% of airspace</span></p>
+  </div>
+  <a href="brief_F.png?v=202611140741"><img src="brief_F.png?v=202611140741"
+     alt="F shift briefing sheet for 2026-11-14: workload HIGH" loading="lazy"></a>
+  <table><thead><tr><th>Date</th><th>Workload</th><th>Driver</th></tr></thead><tbody><tr><td>Sat 14 Nov</td><td><span class="chip" style="--c:#c62828">HIGH</span></td><td>Turbulence (CAT): DTI ≥8 over 34% of airspace</td></tr><tr><td>Sun 15 Nov</td><td><span class="chip" style="--c:#c62828">HIGH</span></td><td>Turbulence (CAT): DTI ≥8 over 54% of airspace</td></tr><tr><td>Mon 16 Nov</td><td><span class="chip" style="--c:#c62828">HIGH</span></td><td>Turbulence (CAT): DTI ≥8 over 73% of airspace; Icing: icing ≥6 h over 55% of airspace</td></tr><tr><td>Tue 17 Nov</td><td><span class="chip" style="--c:#c62828">HIGH</span></td><td>Turbulence (CAT): DTI ≥8 over 43% of airspace</td></tr><tr><td>Wed 18 Nov</td><td><span class="chip" style="--c:#c62828">HIGH</span></td><td>Turbulence (CAT): DTI ≥8 over 76% of airspace</td></tr></tbody></table>
+  <a href="string_F.png?v=202611140741"><img src="string_F.png?v=202611140741"
+     alt="F shift five-day outlook" loading="lazy"></a>
+</section>
+<section id="N">
+  <div class="sec-head">
+    <h2>N shift · 1300–2100 local</h2>
+    <p>Next shift: <strong>Sat 14 Nov</strong> <span class="chip" style="--c:#2e7d4f">LOW</span>
+       <span class="why">No hazard reaches moderate thresholds</span></p>
+  </div>
+  <a href="brief_N.png?v=202611140741"><img src="brief_N.png?v=202611140741"
+     alt="N shift briefing sheet for 2026-11-14: workload LOW" loading="lazy"></a>
+  <table><thead><tr><th>Date</th><th>Workload</th><th>Driver</th></tr></thead><tbody><tr><td>Sat 14 Nov</td><td><span class="chip" style="--c:#2e7d4f">LOW</span></td><td>No hazard reaches moderate thresholds</td></tr><tr><td>Sun 15 Nov</td><td><span class="chip" style="--c:#c62828">HIGH</span></td><td>Turbulence (CAT): DTI ≥8 over 53% of airspace</td></tr><tr><td>Mon 16 Nov</td><td><span class="chip" style="--c:#c62828">HIGH</span></td><td>Turbulence (CAT): DTI ≥8 over 61% of airspace; Icing: icing ≥6 h over 76% of airspace</td></tr><tr><td>Tue 17 Nov</td><td><span class="chip" style="--c:#c62828">HIGH</span></td><td>Turbulence (CAT): DTI ≥12 over 11% of airspace</td></tr><tr><td>Wed 18 Nov</td><td><span class="chip" style="--c:#c62828">HIGH</span></td><td>Turbulence (CAT): DTI ≥8 over 53% of airspace</td></tr></tbody></table>
+  <a href="string_N.png?v=202611140741"><img src="string_N.png?v=202611140741"
+     alt="N shift five-day outlook" loading="lazy"></a>
+</section>
+<section id="tmu">
+  <div class="sec-head">
+    <h2>OM/TMU/OS</h2>
+    <p><strong>Sat 14 Nov</strong> · issued 0741Z
+       <span class="why">Solid = hazard · hatched = awareness</span></p>
+  </div>
+  
+  <h3>Morning · 0500–1300 EST</h3>
+  <p class="tmu-row"><strong>Hazard:</strong> <span class="chip" style="--c:#a6400b" title="0500–0900L · DTI ≥ 12 (max 19) · ~FL240–FL300">Severe turbulence (CAT)</span><span class="chip" style="--c:#5a1608" title="0800L · DTI ≥ 16 (max 19) · ~FL240–FL390">Extreme turbulence (CAT)</span></p>
+  <p class="tmu-row"><strong>Awareness:</strong> <span class="chip" style="--c:#8e24aa" title="0500–1300L · P(IFR) ≥ 40% · LIFR over 1% of ZJX · land only">IFR / LIFR</span><span class="chip" style="--c:#e8871e" title="0500–1300L · DTI ≥ 8 (max 19) · ~FL240–FL300">Moderate turbulence (CAT)</span><span class="chip" style="--c:#00897b" title="0500–1100L · NBM LLWS below 2,000 ft AGL · wind at shear height up to 68 kt">Low-level wind shear</span></p>
+  <a href="tmu/tmu_AM.png?v=202611140741"><img src="tmu/tmu_AM.png?v=202611140741"
+     alt="OM/TMU/OS Morning map 0500–1300 EST: hazards
+     Severe turbulence (CAT), Extreme turbulence (CAT); awareness
+     IFR / LIFR, Moderate turbulence (CAT), Low-level wind shear" loading="lazy"></a>
+  <h3>Afternoon · 1300–2100 EST</h3>
+  <p class="tmu-row"><strong>Hazard:</strong> <span class="why">none in ZJX</span></p>
+  <p class="tmu-row"><strong>Awareness:</strong> <span class="chip" style="--c:#8e24aa" title="1300–1700L · P(IFR) ≥ 40% · land only">IFR / LIFR</span><span class="chip" style="--c:#e8871e" title="1300–2100L · DTI ≥ 8 (max 14) · ~FL240–FL300">Moderate turbulence (CAT)</span><span class="chip" style="--c:#1e88e5" title="1900–2100L · Icing potential ≥ 0.5 for ≥ 2 h · FL065–FL065 · FZL ~FL113">Moderate icing</span></p>
+  <a href="tmu/tmu_PM.png?v=202611140741"><img src="tmu/tmu_PM.png?v=202611140741"
+     alt="OM/TMU/OS Afternoon map 1300–2100 EST: hazards
+     none; awareness
+     IFR / LIFR, Moderate turbulence (CAT), Moderate icing" loading="lazy"></a>
+  <h3>Overnight · 2100–0500 EST</h3>
+  <p class="tmu-row"><strong>Hazard:</strong> <span class="why">none in ZJX</span></p>
+  <p class="tmu-row"><strong>Awareness:</strong> <span class="chip" style="--c:#e8871e" title="2100–0000L, 0300–0500L · DTI ≥ 8 (max 11) · ~FL240–FL380">Moderate turbulence (CAT)</span><span class="chip" style="--c:#1e88e5" title="2100–0500L · Icing potential ≥ 0.5 for ≥ 2 h · FL065–FL065 · FZL ~FL110">Moderate icing</span></p>
+  <a href="tmu/tmu_MID.png?v=202611140741"><img src="tmu/tmu_MID.png?v=202611140741"
+     alt="OM/TMU/OS Overnight map 2100–0500 EST: hazards
+     none; awareness
+     Moderate turbulence (CAT), Moderate icing" loading="lazy"></a>
+</section>
+</main>
+<footer>Unofficial planning aid generated automatically from raw GFS model output. Not a substitute for official weather information: consult AWC G-AIRMETs, SIGMETs, CWAs and the ZJX CWSU. ZJX boundary from VATSIM vatspy-data-project (approximate, not FAA-official).</footer>
+</body>
+</html>

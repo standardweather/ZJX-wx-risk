@@ -1,0 +1,304 @@
+{
+  "issued": "2026-11-14T07:41Z",
+  "day": "2026-11-14",
+  "sources": "HRRR 2026-11-14 06Z (thunderstorms) · NBM v4 2026-11-14 06Z (thunder probability, IFR/LIFR, LLWS, freezing rain) · GFS seamless via Open-Meteo 2026-11-14 00:00Z (thunder signal, turbulence FL240–FL390, icing FL025–FL210)",
+  "periods": [
+    {
+      "period": "AM",
+      "name": "Morning",
+      "image": "tmu_AM.png",
+      "start_utc": "2026-11-14T10:00:00+00:00",
+      "end_utc": "2026-11-14T18:00:00+00:00",
+      "local": "0500–1300 EST",
+      "date": "2026-11-14",
+      "items": [
+        {
+          "key": "ts",
+          "kind": "HAZARD",
+          "name": "Thunderstorms",
+          "present": false,
+          "available": true,
+          "area_frac": 0.0,
+          "hours": "",
+          "detail": "",
+          "source": "HRRR + NBM + GFS"
+        },
+        {
+          "key": "turb_sev",
+          "kind": "HAZARD",
+          "name": "Severe turbulence (CAT)",
+          "present": true,
+          "available": true,
+          "area_frac": 0.0595,
+          "hours": "0500–0900L",
+          "detail": "DTI ≥ 12 (max 19) · ~FL240–FL300",
+          "source": "GFS"
+        },
+        {
+          "key": "turb_ext",
+          "kind": "HAZARD",
+          "name": "Extreme turbulence (CAT)",
+          "present": true,
+          "available": true,
+          "area_frac": 0.003,
+          "hours": "0800L",
+          "detail": "DTI ≥ 16 (max 19) · ~FL240–FL390",
+          "source": "GFS"
+        },
+        {
+          "key": "ice_sev",
+          "kind": "HAZARD",
+          "name": "Severe icing",
+          "present": false,
+          "available": true,
+          "area_frac": 0.0,
+          "hours": "",
+          "detail": "",
+          "source": "NBM + GFS"
+        },
+        {
+          "key": "ifr",
+          "kind": "AWARENESS",
+          "name": "IFR / LIFR",
+          "present": true,
+          "available": true,
+          "area_frac": 0.04,
+          "hours": "0500–1300L",
+          "detail": "P(IFR) ≥ 40% · LIFR over 1% of ZJX · land only",
+          "source": "NBM"
+        },
+        {
+          "key": "turb_mod",
+          "kind": "AWARENESS",
+          "name": "Moderate turbulence (CAT)",
+          "present": true,
+          "available": true,
+          "area_frac": 0.3462,
+          "hours": "0500–1300L",
+          "detail": "DTI ≥ 8 (max 19) · ~FL240–FL300",
+          "source": "GFS"
+        },
+        {
+          "key": "ice_mod",
+          "kind": "AWARENESS",
+          "name": "Moderate icing",
+          "present": false,
+          "available": true,
+          "area_frac": 0.0,
+          "hours": "",
+          "detail": "Icing potential ≥ 0.5 for ≥ 2 h · FZL ~FL120",
+          "source": "GFS"
+        },
+        {
+          "key": "llws",
+          "kind": "AWARENESS",
+          "name": "Low-level wind shear",
+          "present": true,
+          "available": true,
+          "area_frac": 0.0097,
+          "hours": "0500–1100L",
+          "detail": "NBM LLWS below 2,000 ft AGL · wind at shear height up to 68 kt",
+          "source": "NBM"
+        }
+      ]
+    },
+    {
+      "period": "PM",
+      "name": "Afternoon",
+      "image": "tmu_PM.png",
+      "start_utc": "2026-11-14T18:00:00+00:00",
+      "end_utc": "2026-11-15T02:00:00+00:00",
+      "local": "1300–2100 EST",
+      "date": "2026-11-14",
+      "items": [
+        {
+          "key": "ts",
+          "kind": "HAZARD",
+          "name": "Thunderstorms",
+          "present": false,
+          "available": true,
+          "area_frac": 0.0,
+          "hours": "",
+          "detail": "",
+          "source": "HRRR + NBM + GFS"
+        },
+        {
+          "key": "turb_sev",
+          "kind": "HAZARD",
+          "name": "Severe turbulence (CAT)",
+          "present": false,
+          "available": true,
+          "area_frac": 0.0,
+          "hours": "",
+          "detail": "",
+          "source": "GFS"
+        },
+        {
+          "key": "turb_ext",
+          "kind": "HAZARD",
+          "name": "Extreme turbulence (CAT)",
+          "present": false,
+          "available": true,
+          "area_frac": 0.0,
+          "hours": "",
+          "detail": "",
+          "source": "GFS"
+        },
+        {
+          "key": "ice_sev",
+          "kind": "HAZARD",
+          "name": "Severe icing",
+          "present": false,
+          "available": true,
+          "area_frac": 0.0,
+          "hours": "",
+          "detail": "",
+          "source": "NBM + GFS"
+        },
+        {
+          "key": "ifr",
+          "kind": "AWARENESS",
+          "name": "IFR / LIFR",
+          "present": true,
+          "available": true,
+          "area_frac": 0.0143,
+          "hours": "1300–1700L",
+          "detail": "P(IFR) ≥ 40% · land only",
+          "source": "NBM"
+        },
+        {
+          "key": "turb_mod",
+          "kind": "AWARENESS",
+          "name": "Moderate turbulence (CAT)",
+          "present": true,
+          "available": true,
+          "area_frac": 0.0193,
+          "hours": "1300–2100L",
+          "detail": "DTI ≥ 8 (max 14) · ~FL240–FL300",
+          "source": "GFS"
+        },
+        {
+          "key": "ice_mod",
+          "kind": "AWARENESS",
+          "name": "Moderate icing",
+          "present": true,
+          "available": true,
+          "area_frac": 0.0242,
+          "hours": "1900–2100L",
+          "detail": "Icing potential ≥ 0.5 for ≥ 2 h · FL065–FL065 · FZL ~FL113",
+          "source": "GFS"
+        },
+        {
+          "key": "llws",
+          "kind": "AWARENESS",
+          "name": "Low-level wind shear",
+          "present": false,
+          "available": true,
+          "area_frac": 0.0,
+          "hours": "",
+          "detail": "",
+          "source": "NBM"
+        }
+      ]
+    },
+    {
+      "period": "MID",
+      "name": "Overnight",
+      "image": "tmu_MID.png",
+      "start_utc": "2026-11-15T02:00:00+00:00",
+      "end_utc": "2026-11-15T10:00:00+00:00",
+      "local": "2100–0500 EST",
+      "date": "2026-11-14",
+      "items": [
+        {
+          "key": "ts",
+          "kind": "HAZARD",
+          "name": "Thunderstorms",
+          "present": false,
+          "available": true,
+          "area_frac": 0.0,
+          "hours": "",
+          "detail": "",
+          "source": "HRRR + NBM + GFS"
+        },
+        {
+          "key": "turb_sev",
+          "kind": "HAZARD",
+          "name": "Severe turbulence (CAT)",
+          "present": false,
+          "available": true,
+          "area_frac": 0.0,
+          "hours": "",
+          "detail": "",
+          "source": "GFS"
+        },
+        {
+          "key": "turb_ext",
+          "kind": "HAZARD",
+          "name": "Extreme turbulence (CAT)",
+          "present": false,
+          "available": true,
+          "area_frac": 0.0,
+          "hours": "",
+          "detail": "",
+          "source": "GFS"
+        },
+        {
+          "key": "ice_sev",
+          "kind": "HAZARD",
+          "name": "Severe icing",
+          "present": false,
+          "available": true,
+          "area_frac": 0.0,
+          "hours": "",
+          "detail": "",
+          "source": "NBM + GFS"
+        },
+        {
+          "key": "ifr",
+          "kind": "AWARENESS",
+          "name": "IFR / LIFR",
+          "present": false,
+          "available": true,
+          "area_frac": 0.0,
+          "hours": "",
+          "detail": "",
+          "source": "NBM"
+        },
+        {
+          "key": "turb_mod",
+          "kind": "AWARENESS",
+          "name": "Moderate turbulence (CAT)",
+          "present": true,
+          "available": true,
+          "area_frac": 0.1709,
+          "hours": "2100–0000L, 0300–0500L",
+          "detail": "DTI ≥ 8 (max 11) · ~FL240–FL380",
+          "source": "GFS"
+        },
+        {
+          "key": "ice_mod",
+          "kind": "AWARENESS",
+          "name": "Moderate icing",
+          "present": true,
+          "available": true,
+          "area_frac": 0.0896,
+          "hours": "2100–0500L",
+          "detail": "Icing potential ≥ 0.5 for ≥ 2 h · FL065–FL065 · FZL ~FL110",
+          "source": "GFS"
+        },
+        {
+          "key": "llws",
+          "kind": "AWARENESS",
+          "name": "Low-level wind shear",
+          "present": false,
+          "available": true,
+          "area_frac": 0.0,
+          "hours": "",
+          "detail": "",
+          "source": "NBM"
+        }
+      ]
+    }
+  ]
+}
