@@ -1,0 +1,177 @@
+[
+  {
+    "date": "2026-11-21",
+    "shift": "F",
+    "start_utc": "2026-11-21T10:15:00+00:00",
+    "end_utc": "2026-11-21T18:15:00+00:00",
+    "workload": "MODERATE",
+    "reason": "Icing: icing ≥3 h over 48% of airspace",
+    "hazards": [
+      {
+        "name": "Thunderstorms",
+        "level": "LOW",
+        "detail": "11% of airspace ≥1 TS hour · max 6 h · CAPE max 2,568 J/kg",
+        "driver": ""
+      },
+      {
+        "name": "Turbulence (CAT)",
+        "level": "LOW",
+        "detail": "DTI max 11 near FL320 · 2% of airspace ≥8",
+        "driver": ""
+      },
+      {
+        "name": "Icing",
+        "level": "MODERATE",
+        "detail": "48% of airspace ≥3 icing h · max 10 h · FL140–FL210 · FZL ~FL133",
+        "driver": "icing ≥3 h over 48% of airspace"
+      },
+      {
+        "name": "Heavy precipitation",
+        "level": "LOW",
+        "detail": "max 7.34 in · 7% of airspace >1 in",
+        "driver": ""
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "date": "2026-11-22",
+    "shift": "F",
+    "start_utc": "2026-11-22T10:15:00+00:00",
+    "end_utc": "2026-11-22T18:15:00+00:00",
+    "workload": "MODERATE",
+    "reason": "Turbulence (CAT): DTI ≥8 over 16% of airspace",
+    "hazards": [
+      {
+        "name": "Thunderstorms",
+        "level": "LOW",
+        "detail": "7% of airspace ≥1 TS hour · max 4 h · CAPE max 2,768 J/kg",
+        "driver": ""
+      },
+      {
+        "name": "Turbulence (CAT)",
+        "level": "MODERATE",
+        "detail": "DTI max 11 near FL365 · 16% of airspace ≥8",
+        "driver": "DTI ≥8 over 16% of airspace"
+      },
+      {
+        "name": "Icing",
+        "level": "LOW",
+        "detail": "15% of airspace ≥3 icing h · max 8 h · FL140–FL210 · FZL ~FL142",
+        "driver": ""
+      },
+      {
+        "name": "Heavy precipitation",
+        "level": "LOW",
+        "detail": "max 4.21 in · 3% of airspace >1 in",
+        "driver": ""
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "date": "2026-11-23",
+    "shift": "F",
+    "start_utc": "2026-11-23T10:15:00+00:00",
+    "end_utc": "2026-11-23T18:15:00+00:00",
+    "workload": "MODERATE",
+    "reason": "Turbulence (CAT): DTI ≥12 over 2% of airspace",
+    "hazards": [
+      {
+        "name": "Thunderstorms",
+        "level": "LOW",
+        "detail": "0% of airspace ≥1 TS hour · max 0 h · CAPE max 201 J/kg",
+        "driver": ""
+      },
+      {
+        "name": "Turbulence (CAT)",
+        "level": "MODERATE",
+        "detail": "DTI max 14 near FL285 · 14% of airspace ≥8",
+        "driver": "DTI ≥12 over 2% of airspace"
+      },
+      {
+        "name": "Icing",
+        "level": "LOW",
+        "detail": "17% of airspace ≥3 icing h · max 10 h · FL115–FL210 · FZL ~FL135",
+        "driver": ""
+      },
+      {
+        "name": "Heavy precipitation",
+        "level": "LOW",
+        "detail": "max 0.14 in · 0% of airspace >1 in",
+        "driver": ""
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "date": "2026-11-24",
+    "shift": "F",
+    "start_utc": "2026-11-24T10:15:00+00:00",
+    "end_utc": "2026-11-24T18:15:00+00:00",
+    "workload": "HIGH",
+    "reason": "Turbulence (CAT): DTI ≥8 over 94% of airspace; Icing: icing ≥6 h over 80% of airspace",
+    "hazards": [
+      {
+        "name": "Thunderstorms",
+        "level": "LOW",
+        "detail": "0% of airspace ≥1 TS hour · max 0 h · CAPE max 469 J/kg",
+        "driver": ""
+      },
+      {
+        "name": "Turbulence (CAT)",
+        "level": "HIGH",
+        "detail": "DTI max 26 near FL320 · 94% of airspace ≥8",
+        "driver": "DTI ≥8 over 94% of airspace"
+      },
+      {
+        "name": "Icing",
+        "level": "HIGH",
+        "detail": "89% of airspace ≥3 icing h · max 10 h · FL115–FL210 · FZL ~FL108",
+        "driver": "icing ≥6 h over 80% of airspace"
+      },
+      {
+        "name": "Heavy precipitation",
+        "level": "LOW",
+        "detail": "max 1.28 in · 0% of airspace >1 in",
+        "driver": ""
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "date": "2026-11-25",
+    "shift": "F",
+    "start_utc": "2026-11-25T10:15:00+00:00",
+    "end_utc": "2026-11-25T18:15:00+00:00",
+    "workload": "HIGH",
+    "reason": "Turbulence (CAT): DTI ≥8 over 73% of airspace; Icing: icing ≥6 h over 63% of airspace",
+    "hazards": [
+      {
+        "name": "Thunderstorms",
+        "level": "LOW",
+        "detail": "6% of airspace ≥1 TS hour · max 5 h · CAPE max 735 J/kg",
+        "driver": ""
+      },
+      {
+        "name": "Turbulence (CAT)",
+        "level": "HIGH",
+        "detail": "DTI max 22 near FL285 · 73% of airspace ≥8",
+        "driver": "DTI ≥8 over 73% of airspace"
+      },
+      {
+        "name": "Icing",
+        "level": "HIGH",
+        "detail": "76% of airspace ≥3 icing h · max 10 h · FL115–FL210 · FZL ~FL113",
+        "driver": "icing ≥6 h over 63% of airspace"
+      },
+      {
+        "name": "Heavy precipitation",
+        "level": "LOW",
+        "detail": "max 3.77 in · 9% of airspace >1 in",
+        "driver": ""
+      }
+    ],
+    "warnings": []
+  }
+]
