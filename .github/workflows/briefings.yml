@@ -12,6 +12,12 @@ on:
     # Evening refresh of the briefing sheets (12Z GFS).
     - cron: "40 17 * * *"
   workflow_dispatch:
+    inputs:
+      slot:
+        description: "manual = everything; morning / evening = act like that schedule (used by keep-schedule.yml)"
+        default: manual
+        type: choice
+        options: [manual, morning, evening]
 
 permissions:
   contents: write
@@ -23,6 +29,7 @@ concurrency:
 jobs:
   # Decide what this run does from what is already published:
   #  - manual run: everything, including fresh OM/TMU/OS maps;
+  #  - keep-schedule.yml's timer passes slot=morning or slot=evening and is treated like that schedule;
   #  - morning schedule: everything if today's maps are not out yet, else nothing;
   #  - evening schedule: briefings, plus the maps only if the morning never made them.
   plan:
@@ -36,16 +43,18 @@ jobs:
         env:
           EVENT: ${{ github.event_name }}
           SCHED: ${{ github.event.schedule }}
+          SLOT: ${{ inputs.slot }}
         run: |
           TODAY=$(TZ=America/New_York date +%F)
           PUB=$( (git fetch -q --depth 1 origin briefings && git show FETCH_HEAD:tmu/tmu.json \
                   | python3 -c 'import json,sys; print(json.load(sys.stdin)["day"])') 2>/dev/null || echo none)
-          if [ "$EVENT" = workflow_dispatch ]; then run=true; tmu=true
+          if [ "$EVENT" = workflow_dispatch ] && [ "$SLOT" = evening ]; then SCHED="40 17 * * *"; fi
+          if [ "$EVENT" = workflow_dispatch ] && [ "${SLOT:-manual}" = manual ]; then run=true; tmu=true
           elif [ "$SCHED" = "40 17 * * *" ]; then run=true; if [ "$PUB" = "$TODAY" ]; then tmu=false; else tmu=true; fi
           elif [ "$PUB" = "$TODAY" ]; then run=false; tmu=false
           else run=true; tmu=true
           fi
-          echo "today=$TODAY published=$PUB event=$EVENT schedule='$SCHED' -> run=$run tmu=$tmu"
+          echo "today=$TODAY published=$PUB event=$EVENT slot=${SLOT:-} schedule='$SCHED' -> run=$run tmu=$tmu"
           echo "run=$run" >> "$GITHUB_OUTPUT"
           echo "tmu=$tmu" >> "$GITHUB_OUTPUT"
 
