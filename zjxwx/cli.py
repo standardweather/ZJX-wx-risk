@@ -101,10 +101,24 @@ def _report(args, pairs):
 
 
 def cmd_fetch(args):
-    from .fetch import fetch
+    log = lambda m: print(m, file=sys.stderr)  # noqa: E731
+    day = _local_day(args.start)
+    gj = None
+    if args.source in ("open-meteo", "auto"):
+        from .fetch import fetch
 
-    gj = fetch(_local_day(args.start), args.days, args.step, model=args.model,
-               log=lambda m: print(m, file=sys.stderr))
+        try:
+            gj = fetch(day, args.days, args.step, model=args.model, log=log)
+        except Exception as e:
+            if args.source == "open-meteo":
+                raise
+            log(f"Open-Meteo failed ({type(e).__name__}: {str(e)[:160]}); "
+                "falling back to GFS from NOAA on AWS")
+            print("::warning::Open-Meteo failed; GFS taken from NOAA's AWS bucket instead", file=sys.stderr)
+    if gj is None:
+        from .gfs_aws import fetch as fetch_aws
+
+        gj = fetch_aws(day, args.days, args.step, log=log)
     with open(args.out, "w") as fh:
         json.dump(gj, fh, separators=(",", ":"))
     print("wrote", args.out)
@@ -191,11 +205,13 @@ def main(argv=None):
     s.add_argument("--days", type=int, default=6)
     s.set_defaults(func=cmd_string, dpi=150)
 
-    f = sub.add_parser("fetch", help="download GFS from Open-Meteo")
+    f = sub.add_parser("fetch", help="download GFS from Open-Meteo or NOAA's AWS bucket")
     f.add_argument("--start", type=_date, required=True, help="YYYY-MM-DD or 'today'")
     f.add_argument("--days", type=int, default=3)
     f.add_argument("--step", type=float, help="grid spacing in degrees (default 0.5)")
     f.add_argument("--model", help="Open-Meteo 'models' value, e.g. gfs025")
+    f.add_argument("--source", choices=["auto", "open-meteo", "aws"], default="auto",
+                   help="auto (default): Open-Meteo, then GFS from NOAA on AWS if Open-Meteo fails")
     f.add_argument("--out", required=True)
     f.set_defaults(func=cmd_fetch)
 

@@ -80,6 +80,7 @@ zjxwx/analysis.py     shift windows (DST-aware), per-shift summaries, workload r
 zjxwx/geo.py          boundary, area-weighted airspace statistics, basemap
 zjxwx/render.py       briefing sheet and shift-string graphics
 zjxwx/fetch.py        Open-Meteo GFS client (batched, retried)
+zjxwx/gfs_aws.py      Same GFS point grid from NOAA's AWS bucket (fallback; no key, no quota)
 zjxwx/hrrr.py         HRRR echo tops and lightning from AWS open data (newest cycle per hour)
 zjxwx/nbm.py          NBM GRIB2 download from AWS open data (byte ranges), cut to the map extent
 zjxwx/tmu.py          OM/TMU/OS hazard and awareness maps
@@ -92,11 +93,11 @@ samples/              example output (synthetic data) and the original script's 
 ## Automated runs (GitHub Actions)
 `.github/workflows/briefings.yml` runs in the morning (06:15Z, 07:30Z or 08:45Z, whichever GitHub starts first) and at 17:40Z, after Open-Meteo has the 00Z and 12Z GFS cycles. You can also start it by hand from the **Actions** tab ("Run workflow"). Each run does three things:
 
-1. Fetches six days of GFS (about 3,100 Open-Meteo weighted calls).
+1. Fetches six days of GFS (about 3,100 Open-Meteo weighted calls). If Open-Meteo fails, for example because GitHub's shared runner address has used up the daily quota, the same fields come from NOAA's GFS 0.25° files on AWS instead (`fetch --source auto`, the default). Those match Open-Meteo from day 3 on; in the first two days Open-Meteo's `gfs_seamless` also blends in HRRR, so the AWS values differ there (see `zjxwx/gfs_aws.py`).
 2. Renders the next F and N briefing sheets and the 5-day F and N shift strings.
    The OM/TMU/OS maps are made once a day. The morning is scheduled three times (06:15Z, 07:30Z and 08:45Z, i.e. 01:15–03:45 EST), because GitHub starts scheduled runs late and sometimes drops them. The first run to start makes the maps and the others exit at once. The 17:40Z run carries the morning's maps forward, or makes them if no morning run happened. Manual runs always make fresh maps.
 
    **GitHub's scheduler is best-effort.** In Nov 2026 scheduled runs here started 4–8 hours late, and on 7 Nov the morning run never started. For a hard 0500L deadline, trigger the workflow from an external cron service (see below).
 3. Force-pushes the images, plus a `README.md` summary, to the **`briefings`** branch. They're also kept as a run artifact for 14 days.
 
-**Open-Meteo terms:** the free API is for non-commercial use and allows 10,000 weighted calls per day. Two scheduled runs and one manual run fit within that. For customer distribution, buy an Open-Meteo API subscription and add the key as the repository secret `OPEN_METEO_API_KEY`. The fetcher then switches to the customer endpoint automatically.
+**Open-Meteo terms:** the free API is for non-commercial use and allows 10,000 weighted calls per day. Two scheduled runs and one manual run fit within that, but GitHub's runners share IP addresses, so other people's jobs can use up the quota first (20 and 22 Nov 2026); the AWS fallback covers that. For customer distribution, buy an Open-Meteo API subscription and add the key as the repository secret `OPEN_METEO_API_KEY`. The fetcher then switches to the customer endpoint automatically.
