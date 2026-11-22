@@ -1,6 +1,6 @@
 # zjx-wx: ZJX pre-shift weather and workload briefings
 
-This package turns GFS output from Open-Meteo into two products for ZJX ARTCC:
+This package turns GFS (or HRRR) output from NOAA's open data on AWS into two products for ZJX ARTCC:
 
 * **Briefing sheet** (`brief`): one shift. It has three hazard maps (precipitation and thunderstorms, clear-air turbulence for FL240–FL390, and icing potential with the freezing level), a workload scorecard and an hourly hazard-coverage timeline.
 * **Shift-string outlook** (`string`): several days of the same shift. It has a hazard × day calendar strip and a composite map for each day.
@@ -79,7 +79,8 @@ zjxwx/diagnostics.py  spherical kinematics, Ellrod TI1 / Ellrod-Knox DTI, icing 
 zjxwx/analysis.py     shift windows (DST-aware), per-shift summaries, workload rating
 zjxwx/geo.py          boundary, area-weighted airspace statistics, basemap
 zjxwx/render.py       briefing sheet and shift-string graphics
-zjxwx/fetch.py        Open-Meteo GFS client (batched, retried)
+zjxwx/noaa_aws.py     GFS or HRRR point grid from NOAA's AWS buckets (no key, no quota)
+zjxwx/fetch.py        old Open-Meteo GFS client, kept only for comparison (--source open-meteo)
 zjxwx/hrrr.py         HRRR echo tops and lightning from AWS open data (newest cycle per hour)
 zjxwx/nbm.py          NBM GRIB2 download from AWS open data (byte ranges), cut to the map extent
 zjxwx/tmu.py          OM/TMU/OS hazard and awareness maps
@@ -90,13 +91,13 @@ samples/              example output (synthetic data) and the original script's 
 ```
 
 ## Automated runs (GitHub Actions)
-`.github/workflows/briefings.yml` runs in the morning (06:15Z, 07:30Z or 08:45Z, whichever GitHub starts first) and at 17:40Z, after Open-Meteo has the 00Z and 12Z GFS cycles. You can also start it by hand from the **Actions** tab ("Run workflow"). Each run does three things:
+`.github/workflows/briefings.yml` runs in the morning (06:15Z, 07:30Z or 08:45Z, whichever GitHub starts first) and at 17:40Z, after the 00Z and 12Z GFS cycles are on AWS. You can also start it by hand from the **Actions** tab ("Run workflow"). Each run does three things:
 
-1. Fetches six days of GFS (about 3,100 Open-Meteo weighted calls).
+1. Fetches six days of GFS 0.25° from `s3://noaa-gfs-bdp-pds` (about 166 files, 40 GRIB messages each, ~2 minutes). Set the repository variable `ZJX_MODEL` to `hrrr`, or pick `hrrr` when running by hand, to use HRRR from `s3://noaa-hrrr-bdp-pds` instead; HRRR reaches 48 hours, so later days of the string outlook stay empty. See `zjxwx/noaa_aws.py` for the field mapping. Until 22 Nov 2026 this came from Open-Meteo, whose default blended HRRR into the first two days, so day 1-2 values differ a little from before.
 2. Renders the next F and N briefing sheets and the 5-day F and N shift strings.
    The OM/TMU/OS maps are made once a day. The morning is scheduled three times (06:15Z, 07:30Z and 08:45Z, i.e. 01:15–03:45 EST), because GitHub starts scheduled runs late and sometimes drops them. The first run to start makes the maps and the others exit at once. The 17:40Z run carries the morning's maps forward, or makes them if no morning run happened. Manual runs always make fresh maps.
 
    **GitHub's scheduler is best-effort.** In Nov 2026 scheduled runs here started 4–8 hours late, and on 7 Nov the morning run never started. For a hard 0500L deadline, trigger the workflow from an external cron service (see below).
 3. Force-pushes the images, plus a `README.md` summary, to the **`briefings`** branch. They're also kept as a run artifact for 14 days.
 
-**Open-Meteo terms:** the free API is for non-commercial use and allows 10,000 weighted calls per day. Two scheduled runs and one manual run fit within that. For customer distribution, buy an Open-Meteo API subscription and add the key as the repository secret `OPEN_METEO_API_KEY`. The fetcher then switches to the customer endpoint automatically.
+**Data source:** NOAA's GFS and HRRR buckets on AWS are free, need no key and have no quota. Open-Meteo was dropped because its free daily quota is counted per IP address and GitHub's shared runners used it up (20 and 22 Nov 2026).

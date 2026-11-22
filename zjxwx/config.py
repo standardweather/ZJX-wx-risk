@@ -13,7 +13,7 @@ from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
 
-# Map extent (lon0, lon1, lat0, lat1) and the Open-Meteo sampling grid.
+# Map extent (lon0, lon1, lat0, lat1) and the 0.5° model sampling grid.
 EXTENT = (-88.4, -76.6, 24.3, 35.3)
 GRID = {"lat0": 23.5, "lat1": 36.0, "lon0": -89.5, "lon1": -75.0, "step": 0.5}
 
@@ -44,7 +44,7 @@ TMU_PERIODS = (
 # Pressure levels. Cruise (FL240-FL450) layers for CAT; low/mid levels for icing.
 CAT_LEVELS = (400, 350, 300, 250, 200)          # layers taken between neighbours
 # 925-450 hPa (~FL025-FL210). Kept to 10 levels so a fetch is 40 variables,
-# i.e. 4 Open-Meteo weighted calls per point (see fetch.py).
+# (originally 4 Open-Meteo weighted calls per point; now 40 GRIB messages per file, see noaa_aws.py).
 ICING_LEVELS = (925, 850, 800, 750, 700, 650, 600, 550, 500, 450)
 JET_LEVEL = 250
 
@@ -171,7 +171,7 @@ AIRPORTS = {  # id: (lon, lat)
     "ATL": (-84.428, 33.637),
 }
 
-DISCLAIMER = ("Unofficial planning aid generated automatically from raw GFS model output. "
+DISCLAIMER = ("Unofficial planning aid generated automatically from raw NOAA model output (GFS or HRRR). "
               "Not a substitute for official weather information: consult AWC G-AIRMETs, "
               "SIGMETs, CWAs and the ZJX CWSU. ZJX boundary from VATSIM vatspy-data-project "
               "(approximate, not FAA-official).")

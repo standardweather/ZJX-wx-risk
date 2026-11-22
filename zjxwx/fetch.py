@@ -67,6 +67,9 @@ def _get(params, api, retries=5, log=print):
             if e.code == 400:
                 reason = _reason(body)
                 raise _BadVariable(reason)
+            if e.code == 429 and "daily" in _reason(body).lower():
+                # The daily quota does not come back within this run (seen 20 and 22 Nov 2026).
+                raise
             wait = 65 if e.code == 429 else 2 ** (k + 1)
             log(f"  HTTP {e.code} ({_reason(body)}); retry in {wait}s")
             if k == retries:

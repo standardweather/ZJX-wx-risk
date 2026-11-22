@@ -128,6 +128,8 @@ def summarize(diag: Diagnostics, window: Window, mask=None) -> Summary:
         raise ValueError(f"grid has no data for {window.day} {window.shift.code} shift "
                          f"({window.utc_label()}); grid covers {g.times[0]} to {g.times[-1]} UTC")
     missing = []
+    if len(inst_times) < len(window.instant_hours()):
+        missing.append(f"model hours {len(inst_times)}/{len(window.instant_hours())}")
     if len(acc) < len(window.accum_hours()):
         missing.append(f"precip hours {len(acc)}/{len(window.accum_hours())}")
 

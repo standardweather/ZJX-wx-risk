@@ -9,6 +9,7 @@ Usage: python tools/write_index.py <out_dir> [--note TEXT]
 import argparse
 import html
 import json
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -21,6 +22,11 @@ TMU_COLORS = {"ts": STYLE["tmu"]["ts"], "turb_sev": STYLE["tmu"]["turb_sev"], "t
               "ice_mod": STYLE["tmu"]["ice_mod"], "llws": STYLE["tmu"]["llws"]}
 
 SHIFT_NAMES = {"F": "F shift · 0515–1315 local", "N": "N shift · 1300–2100 local"}
+
+
+def _model_label():
+    """The briefing model, from the workflow's MODEL setting (gfs unless set to hrrr)."""
+    return "HRRR" if os.environ.get("MODEL", "gfs").lower() == "hrrr" else "GFS"
 
 
 def _load(path):
@@ -163,7 +169,7 @@ def build(out: Path, note: str = ""):
 <header><div class="wrap">
   <div class="kicker">ZJX ARTCC · PRE-SHIFT WEATHER &amp; WORKLOAD BRIEFINGS</div>
   <h1>Latest shift briefings</h1>
-  <div class="meta">Updated {now:%a %d %b %Y %H%MZ} from GFS via Open-Meteo, plus NBM for the OM/TMU/OS maps · refreshes after the 00Z and 12Z model runs</div>
+  <div class="meta">Updated {now:%a %d %b %Y %H%MZ} from {_model_label()} (NOAA open data on AWS), plus NBM and HRRR for the OM/TMU/OS maps · refreshes after the 00Z and 12Z model runs</div>
   <nav>{nav}</nav>
 </div></header>
 <main>

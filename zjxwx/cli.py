@@ -76,7 +76,13 @@ def cmd_string(args):
     sums, rates = [], []
     start = _resolve(args.start, args.shift, args.tz)
     for i in range(args.days):
-        s = summarize(diag, Window.for_shift(args.shift, start + timedelta(days=i), args.tz), mask)
+        w = Window.for_shift(args.shift, start + timedelta(days=i), args.tz)
+        if sums and grid.time_index(w.start) is None:
+            # a short-range model (HRRR, 48 h) ends before this shift starts
+            print(f"{w.day} {w.shift.code}: no model data (grid ends {grid.times[-1]} UTC); "
+                  f"string covers {len(sums)} day(s)", file=sys.stderr)
+            break
+        s = summarize(diag, w, mask)
         sums.append(s)
         rates.append(assess(s, mask, cfg))
     shift_string(grid, sums, rates, boundary, cfg, args.out, _issued(args.issued), args.dpi)
@@ -101,10 +107,16 @@ def _report(args, pairs):
 
 
 def cmd_fetch(args):
-    from .fetch import fetch
+    log = lambda m: print(m, file=sys.stderr)  # noqa: E731
+    day = _local_day(args.start)
+    if args.source == "open-meteo":
+        from .fetch import fetch
 
-    gj = fetch(_local_day(args.start), args.days, args.step, model=args.model,
-               log=lambda m: print(m, file=sys.stderr))
+        gj = fetch(day, args.days, args.step, model=args.model, log=log)
+    else:
+        from .noaa_aws import fetch
+
+        gj = fetch(day, args.days, args.step, model=args.source, log=log)
     with open(args.out, "w") as fh:
         json.dump(gj, fh, separators=(",", ":"))
     print("wrote", args.out)
@@ -191,11 +203,14 @@ def main(argv=None):
     s.add_argument("--days", type=int, default=6)
     s.set_defaults(func=cmd_string, dpi=150)
 
-    f = sub.add_parser("fetch", help="download GFS from Open-Meteo")
+    f = sub.add_parser("fetch", help="download GFS or HRRR from NOAA's AWS buckets")
     f.add_argument("--start", type=_date, required=True, help="YYYY-MM-DD or 'today'")
     f.add_argument("--days", type=int, default=3)
     f.add_argument("--step", type=float, help="grid spacing in degrees (default 0.5)")
-    f.add_argument("--model", help="Open-Meteo 'models' value, e.g. gfs025")
+    f.add_argument("--source", choices=["gfs", "hrrr", "open-meteo"], default="gfs",
+                   help="gfs (default) or hrrr from NOAA on AWS; hrrr reaches 48 h, later hours stay empty. "
+                        "open-meteo is the old source, kept for comparison only")
+    f.add_argument("--model", help="with --source open-meteo: its 'models' value, e.g. gfs025")
     f.add_argument("--out", required=True)
     f.set_defaults(func=cmd_fetch)
 
