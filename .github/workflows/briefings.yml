@@ -18,6 +18,10 @@ on:
         default: manual
         type: choice
         options: [manual, morning, evening]
+      model:
+        description: "gfs or hrrr (blank = repository variable ZJX_MODEL, else gfs). HRRR reaches 48 h only."
+        default: ""
+        type: string
 
 permissions:
   contents: write
@@ -78,10 +82,12 @@ jobs:
           sudo apt-get update -q && sudo apt-get install -y -q fonts-inter || true
           pip install -r requirements.txt
 
-      - name: Download GFS from Open-Meteo
+      # Model data from NOAA's open buckets on AWS. GFS by default; set the repository variable
+      # ZJX_MODEL to "hrrr" (or pick it when running by hand) to use HRRR, which reaches 48 h only.
+      - name: Download model data from NOAA on AWS
         env:
-          OPEN_METEO_API_KEY: ${{ secrets.OPEN_METEO_API_KEY }}
-        run: python -m zjxwx fetch --start today --days 6 --out gfs.json
+          MODEL: ${{ inputs.model || vars.ZJX_MODEL || 'gfs' }}
+        run: python -m zjxwx fetch --source "$MODEL" --start today --days 6 --out gfs.json
 
       - name: Render briefings
         run: |
@@ -112,6 +118,8 @@ jobs:
             || echo "No earlier OM/TMU/OS maps on the briefings branch"
 
       - name: Write the web page
+        env:
+          MODEL: ${{ inputs.model || vars.ZJX_MODEL || 'gfs' }}
         run: python tools/write_index.py out
 
       - name: Publish to the briefings branch

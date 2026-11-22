@@ -1,4 +1,4 @@
-"""Load the Open-Meteo point-grid JSON into dense (time, lat, lon) arrays.
+"""Load the point-grid JSON (from noaa_aws.py, or the old Open-Meteo client) into dense (time, lat, lon) arrays.
 
 The file format is the one the original scripts used,
 ``{"pts": [[lat, lon], ...], "data": [<Open-Meteo response>, ...]}``,
@@ -49,7 +49,7 @@ class Grid:
 
     @property
     def model_label(self) -> str:
-        return self.meta.get("model", "GFS (Open-Meteo)")
+        return self.meta.get("model", "GFS")
 
     @property
     def synthetic(self) -> bool:
