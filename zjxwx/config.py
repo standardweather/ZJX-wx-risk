@@ -168,7 +168,7 @@ AIRPORTS = {  # id: (lon, lat)
     "JAX": (-81.688, 30.494), "SAV": (-81.202, 32.127), "CHS": (-80.040, 32.899),
     "TLH": (-84.350, 30.397), "MCO": (-81.309, 28.429), "TPA": (-82.533, 27.976),
     "DAB": (-81.058, 29.180), "PNS": (-87.187, 30.473), "MIA": (-80.291, 25.796),
-    "ATL": (-84.428, 33.637),
+    "ATL": (-84.428, 33.637), "CLT": (-80.943, 35.214),
 }
 
 DISCLAIMER = ("Unofficial planning aid generated automatically from raw NOAA model output (GFS or HRRR). "
