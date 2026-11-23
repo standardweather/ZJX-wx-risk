@@ -139,7 +139,10 @@ def _overlay_geography(ax, boundary, airports=True, label_size=7.5):
         inside = boundary.contains(box(x - 1e-3, y - 1e-3, x + 1e-3, y + 1e-3))
         col = S["ink"] if inside else "#8a93a3"
         ax.plot(x, y, "o", ms=3.2, mfc=col, mec="white", mew=0.7, transform=PC, zorder=8)
-        ax.text(x + 0.13, y + 0.08, name, fontsize=label_size, weight="semibold", color=col,
+        # Label below the dot near the top edge (CLT) so it stays inside the map.
+        low = y > EXTENT[3] - 0.4
+        ax.text(x + 0.13, y - 0.08 if low else y + 0.08, name, fontsize=label_size,
+                weight="semibold", color=col, va="top" if low else "baseline",
                 transform=PC, zorder=8, path_effects=HALO)
 
 
